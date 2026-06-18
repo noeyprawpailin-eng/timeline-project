@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar, Layers, ArrowRight, Trash2, Copy, Clock, Pencil } from 'lucide-react';
+import { Calendar, Layers, ArrowRight, Trash2, Copy, Clock, Pencil, AlertTriangle } from 'lucide-react';
 import { Project } from '../../../types/project';
 import { useProjectStore } from '../store/useProjectStore';
 import { HolidayEngine } from '../../../core/calendar/HolidayEngine';
@@ -14,11 +14,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const { selectProject, deleteProject, duplicateProject, renameProject } = useProjectStore();
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(project.name);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
   }, [editing]);
+
+  useEffect(() => {
+    setEditName(project.name);
+  }, [project.name]);
 
   const saveName = () => {
     const trimmed = editName.trim();
@@ -55,8 +60,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             <Copy size={14} />
           </button>
           <button 
-            onClick={(e) => { e.stopPropagation(); deleteProject(project.id); }}
+            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
             className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+            title="ลบโปรเจค"
           >
             <Trash2 size={14} />
           </button>
@@ -112,6 +118,33 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         เปิดโปรเจค
         <ArrowRight size={13} className="transition-transform group-hover/btn:translate-x-0.5" />
       </button>
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setConfirmDelete(false)}>
+          <div className="bg-white rounded-xl shadow-2xl p-5 w-80" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2.5 mb-3">
+              <div className="p-1.5 bg-red-50 rounded-full"><AlertTriangle size={16} className="text-red-500" /></div>
+              <h3 className="text-sm font-bold text-slate-900">ยืนยันการลบ</h3>
+            </div>
+            <p className="text-xs text-slate-500 mb-5">
+              คุณแน่ใจหรือต้องการลบโปรเจค <span className="font-semibold text-slate-700">{project.name}</span>? การกระทำนี้ไม่สามารถย้อนกลับได้
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="px-3.5 py-2 text-xs font-semibold text-slate-500 hover:bg-slate-100 rounded-lg transition-all"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={() => { deleteProject(project.id); setConfirmDelete(false); }}
+                className="px-3.5 py-2 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all"
+              >
+                ยืนยันการลบ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
