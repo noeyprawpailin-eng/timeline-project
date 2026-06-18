@@ -25,12 +25,18 @@ export const firestoreService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(project),
     });
-    if (!res.ok) throw new Error('Failed to save project');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.full || data.error || 'Failed to save project');
+    }
   },
 
   async deleteProject(id: string): Promise<void> {
     const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Failed to delete project');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.full || data.error || 'Failed to delete project');
+    }
   },
 
   async loadHolidays(): Promise<Record<string, string>> {

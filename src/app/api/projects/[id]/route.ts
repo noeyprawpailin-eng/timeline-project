@@ -62,8 +62,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('[Project PUT Error]', e);
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
+    const msg = e instanceof Error ? `${e.message}\n${e.stack?.split('\n').slice(0, 3).join('\n') || ''}` : String(e);
+    console.error('[Project PUT Error]', msg);
+    return NextResponse.json({ error: msg, full: msg }, { status: 500 });
   }
 }
 
@@ -86,7 +87,8 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true });
   } catch (e) {
-    console.error('[Project DELETE Error]', e);
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
+    const msg = e instanceof Error ? `${e.message}\n${e.stack?.split('\n').slice(0, 3).join('\n') || ''}` : String(e);
+    console.error('[Project DELETE Error]', msg);
+    return NextResponse.json({ error: msg, full: msg }, { status: 500 });
   }
 }

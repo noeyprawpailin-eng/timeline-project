@@ -124,11 +124,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   selectProject: (id) => set({ activeProjectId: id }),
 
   deleteProject: async (id) => {
-    await firestoreService.deleteProject(id);
-    set((state) => ({
-      projects: state.projects.filter(p => p.id !== id),
-      activeProjectId: state.activeProjectId === id ? null : state.activeProjectId,
-    }));
+    try {
+      await firestoreService.deleteProject(id);
+      set((state) => ({
+        projects: state.projects.filter(p => p.id !== id),
+        activeProjectId: state.activeProjectId === id ? null : state.activeProjectId,
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[Delete Error]', msg);
+      alert('ลบโปรเจคล้มเหลว: ' + msg);
+    }
   },
 
   duplicateProject: async (id) => {
@@ -160,14 +166,20 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   renameProject: async (id, name) => {
-    const state = get();
-    const project = state.projects.find(p => p.id === id);
-    if (!project) return;
-    const updated = { ...project, name };
-    await firestoreService.saveProject(id, updated);
-    set((s) => ({
-      projects: s.projects.map(p => p.id === id ? updated : p),
-    }));
+    try {
+      const state = get();
+      const project = state.projects.find(p => p.id === id);
+      if (!project) return;
+      const updated = { ...project, name };
+      await firestoreService.saveProject(id, updated);
+      set((s) => ({
+        projects: s.projects.map(p => p.id === id ? updated : p),
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[Rename Error]', msg);
+      alert('เปลี่ยนชื่อโปรเจคล้มเหลว: ' + msg);
+    }
   },
 
   getActiveProject: () => {
