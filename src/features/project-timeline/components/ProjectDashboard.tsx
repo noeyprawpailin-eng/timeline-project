@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ProjectCard } from './ProjectCard';
 
 export const ProjectDashboard: React.FC = () => {
-  const { projects, createProject, globalHolidays, addGlobalHoliday, removeGlobalHoliday, loading } = useProjectStore();
+  const { projects, createProject, globalHolidays, addGlobalHoliday, removeGlobalHoliday, loading, error, clearError } = useProjectStore();
   const { isAdmin, signOut } = useAuth();
   const router = useRouter();
   const [projectName, setProjectName] = useState('');
@@ -82,6 +82,14 @@ export const ProjectDashboard: React.FC = () => {
         </div>
       </header>
 
+      {error && (
+        <div className="max-w-6xl mx-auto px-6 pt-3">
+          <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 flex items-start gap-2">
+            <p className="flex-1 text-xs text-red-700 font-mono whitespace-pre-wrap break-words">{error}</p>
+            <button onClick={clearError} className="text-red-400 hover:text-red-600 font-bold leading-none">&times;</button>
+          </div>
+        </div>
+      )}
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-5 space-y-5">
         {/* Two-column: Create Project + Manage Holidays */}

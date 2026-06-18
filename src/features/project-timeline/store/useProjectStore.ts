@@ -41,6 +41,7 @@ interface ProjectState {
   activeProjectId: string | null;
   globalHolidays: Record<string, string>;
   loading: boolean;
+  error: string | null;
 
   // Lifecycle
   loadProjects: () => Promise<void>;
@@ -52,6 +53,7 @@ interface ProjectState {
   deleteProject: (id: string) => Promise<void>;
   duplicateProject: (id: string) => Promise<void>;
   renameProject: (id: string, name: string) => Promise<void>;
+  clearError: () => void;
 
   // Task Management (for active project)
   updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
@@ -82,6 +84,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   activeProjectId: null,
   globalHolidays: INITIAL_THAI_HOLIDAYS,
   loading: true,
+  error: null,
 
   loadProjects: async () => {
     try {
@@ -122,6 +125,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   selectProject: (id) => set({ activeProjectId: id }),
+  clearError: () => set({ error: null }),
 
   deleteProject: async (id) => {
     try {
@@ -133,7 +137,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error('[Delete Error]', msg);
-      alert('ลบโปรเจคล้มเหลว: ' + msg);
+      set({ error: msg });
     }
   },
 
@@ -178,7 +182,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error('[Rename Error]', msg);
-      alert('เปลี่ยนชื่อโปรเจคล้มเหลว: ' + msg);
+      set({ error: msg });
     }
   },
 
