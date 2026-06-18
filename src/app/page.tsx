@@ -33,10 +33,10 @@ export default function Home() {
   }, [authLoading, user, router]);
 
   useEffect(() => {
-    if (!authLoading && user && storeLoading) {
+    if (!authLoading && user) {
       loadProjects();
     }
-  }, [authLoading, user, storeLoading, loadProjects]);
+  }, [authLoading, user?.uid, loadProjects]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
