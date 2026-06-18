@@ -23,6 +23,23 @@ export async function GET(request: Request) {
         msg: "Firebase init OK, " + test.size + " docs found",
       });
     }
+
+    if (action === "write") {
+      const { initializeApp, getApps, cert } = await import("firebase-admin/app");
+      const { getFirestore } = await import("firebase-admin/firestore");
+      let app = getApps()[0];
+      if (!app) {
+        app = initializeApp({ credential: cert(JSON.parse(key || "{}")) });
+      }
+      const db = getFirestore(app);
+      // Try set
+      const testDoc = db.collection("_debug_test").doc("test");
+      await testDoc.set({ ts: Date.now(), msg: "test write" });
+      // Try delete
+      await testDoc.delete();
+      return NextResponse.json({ ok: true, msg: "write+delete OK" });
+    }
+
     return NextResponse.json({ keyExists: !!key, keyLen: key?.length || 0 });
   } catch (e) {
     return NextResponse.json(
