@@ -26,7 +26,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ ui
     if (role) updates.role = role;
     if (name) updates.name = name;
 
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
     await adminDb.collection('users').doc(uid).update(updates);
     return NextResponse.json({ success: true });
   } catch (e) {
@@ -47,7 +47,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
     }
 
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
     await adminDb.collection('users').doc(uid).delete();
     return NextResponse.json({ success: true });
   } catch (e) {

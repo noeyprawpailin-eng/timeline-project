@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'กรุณากรอกอีเมลและรหัสผ่าน' }, { status: 400 });
     }
 
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
     const snapshot = await adminDb
       .collection('users')
       .where('email', '==', email.toLowerCase().trim())

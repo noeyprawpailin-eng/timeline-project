@@ -1,18 +1,15 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
-
 let initialized = false;
-let _adminAuth: ReturnType<typeof getAuth>;
-let _adminDb: ReturnType<typeof getFirestore>;
+let _adminAuth: any;
+let _adminDb: any;
 
+let _initPromise: Promise<void> | null = null;
 let _lastInitError: string | null = null;
 
 export function getInitError(): string | null {
   return _lastInitError;
 }
 
-function init() {
+async function init() {
   if (initialized) return;
   try {
     const key = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
@@ -22,13 +19,17 @@ function init() {
       throw new Error(_lastInitError);
     }
 
+    const { initializeApp, getApps, cert } = await import('firebase-admin/app');
+    const { getAuth: _getAuth } = await import('firebase-admin/auth');
+    const { getFirestore: _getFirestore } = await import('firebase-admin/firestore');
+
     const app =
       getApps().length === 0
         ? initializeApp({ credential: cert(JSON.parse(key)) })
         : getApps()[0];
 
-    _adminAuth = getAuth(app);
-    _adminDb = getFirestore(app);
+    _adminAuth = _getAuth(app);
+    _adminDb = _getFirestore(app);
     initialized = true;
     _lastInitError = null;
   } catch (err) {
@@ -38,12 +39,22 @@ function init() {
   }
 }
 
-export function getAdminAuth() {
-  init();
-  return _adminAuth;
+function ensureInit() {
+  if (!_initPromise) {
+    _initPromise = init().catch((e) => {
+      _initPromise = null;
+      throw e;
+    });
+  }
+  return _initPromise;
 }
 
-export function getAdminDb() {
-  init();
+export async function getAdminDb() {
+  await ensureInit();
   return _adminDb;
+}
+
+export async function getAdminAuth() {
+  await ensureInit();
+  return _adminAuth;
 }

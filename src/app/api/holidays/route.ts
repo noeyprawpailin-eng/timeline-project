@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { FieldValue } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase-admin';
 
 const DOC_PATH = 'config/global';
 
 export async function GET() {
   try {
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
     const doc = await adminDb.doc(DOC_PATH).get();
     const data = doc.data();
     return NextResponse.json({ holidays: data?.holidays || {} });
@@ -22,7 +21,7 @@ export async function POST(request: Request) {
     if (!date || !name) {
       return NextResponse.json({ error: 'date and name required' }, { status: 400 });
     }
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
     await adminDb.doc(DOC_PATH).set(
       { holidays: { [date]: name } },
       { merge: true }
@@ -41,7 +40,8 @@ export async function DELETE(request: Request) {
     if (!date) {
       return NextResponse.json({ error: 'date query param required' }, { status: 400 });
     }
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
+    const { FieldValue } = await import('firebase-admin/firestore');
     await adminDb.doc(DOC_PATH).update({
       [`holidays.${date}`]: FieldValue.delete(),
     });

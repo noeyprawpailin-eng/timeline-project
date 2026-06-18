@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import type { Firestore, DocumentReference, DocumentData } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase-admin';
 
 function parseSession(session: string | undefined): { uid: string; role?: string } | null {
@@ -12,7 +11,7 @@ function parseSession(session: string | undefined): { uid: string; role?: string
   }
 }
 
-async function findProjectById(adminDb: Firestore, id: string): Promise<{ ref: DocumentReference; data: DocumentData } | null> {
+async function findProjectById(adminDb: any, id: string): Promise<{ ref: any; data: any } | null> {
   const snapshot = await adminDb.collectionGroup('projects').where('id', '==', id).limit(1).get();
   if (snapshot.empty) return null;
   const doc = snapshot.docs[0];
@@ -26,7 +25,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
 
     if (user.role === 'admin') {
       const found = await findProjectById(adminDb, id);
@@ -51,7 +50,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
     const body = await request.json();
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
 
     if (user.role === 'admin') {
       const found = await findProjectById(adminDb, id);
@@ -75,7 +74,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
 
     if (user.role === 'admin') {
       const found = await findProjectById(adminDb, id);

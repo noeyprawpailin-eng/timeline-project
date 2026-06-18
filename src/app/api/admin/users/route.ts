@@ -20,9 +20,9 @@ export async function GET() {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
     const snapshot = await adminDb.collection('users').orderBy('createdAt', 'asc').get();
-    const users = snapshot.docs.map((d) => {
+    const users = snapshot.docs.map((d: any) => {
       const data = d.data();
       return { uid: data.uid, email: data.email, name: data.name, role: data.role, createdAt: data.createdAt };
     });
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'email and password required' }, { status: 400 });
     }
 
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
     const uid = `user_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const newUser = {
       uid,

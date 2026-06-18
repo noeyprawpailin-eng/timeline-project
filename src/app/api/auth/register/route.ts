@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร' }, { status: 400 });
     }
 
-    const adminDb = getAdminDb();
+    const adminDb = await getAdminDb();
     const normalEmail = email.toLowerCase().trim();
 
     const existing = await adminDb
