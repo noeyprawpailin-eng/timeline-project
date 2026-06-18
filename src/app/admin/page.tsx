@@ -28,6 +28,7 @@ export default function AdminPage() {
   const router = useRouter();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [totalProjects, setTotalProjects] = useState(0);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [showCreate, setShowCreate] = useState(false);
@@ -38,12 +39,19 @@ export default function AdminPage() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/users');
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      setUsers(data.users || []);
+      const [usersRes, projectsRes] = await Promise.all([
+        fetch('/api/admin/users'),
+        fetch('/api/projects'),
+      ]);
+      if (!usersRes.ok) throw new Error('Failed to fetch users');
+      const usersData = await usersRes.json();
+      setUsers(usersData.users || []);
+      if (projectsRes.ok) {
+        const projData = await projectsRes.json();
+        setTotalProjects((projData.projects || []).length);
+      }
     } catch {
-      setError('โหลดข้อมูลผู้ใช้ไม่สำเร็จ');
+      setError('โหลดข้อมูลไม่สำเร็จ');
     } finally {
       setFetching(false);
     }
@@ -130,8 +138,6 @@ export default function AdminPage() {
   }
 
   if (!user || !isAdmin) return null;
-
-  const totalProjects = 0;
 
   return (
     <div className="flex min-h-screen flex-col bg-[var(--background)]">
