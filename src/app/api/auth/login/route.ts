@@ -47,7 +47,8 @@ export async function POST(request: Request) {
       user: { uid: userData.uid, email: userData.email, name: userData.name, role: userData.role },
     });
   } catch (e) {
-    console.error('[Login Error]', e);
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('[Login Error]', msg);
+    return NextResponse.json({ error: 'Login failed: ' + msg }, { status: 500 });
   }
 }
