@@ -117,8 +117,15 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
   }, [hierarchy, collapsed]);
 
   const projectStart = new Date(project.startDate);
-  const timelineStart = addDays(projectStart, -2);
-  const totalDays = 60;
+  const taskDates = project.tasks.flatMap(t => [
+    t.manualStartDate || t.calculatedStartDate,
+    t.calculatedEndDate,
+  ].filter(Boolean) as string[]);
+  const earliestTask = taskDates.length ? new Date(taskDates.sort()[0]) : projectStart;
+  const latestTask = taskDates.length ? new Date(taskDates.sort().reverse()[0]) : projectStart;
+  const timelineStart = addDays(earliestTask, -2);
+  const rawDays = differenceInDays(latestTask, timelineStart) + 15;
+  const totalDays = Math.max(rawDays, 30);
 
   const workingDaysSet = new Set(project.config.workingDays || [1, 2, 3, 4, 5]);
   const holidaySet = new Set(Object.keys(project.config.holidays || {}));
