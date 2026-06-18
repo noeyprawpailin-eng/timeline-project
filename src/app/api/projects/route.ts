@@ -21,8 +21,14 @@ export async function GET() {
     let projects;
 
     if (user.role === 'admin') {
-      const snapshot = await adminDb.collectionGroup('projects').get();
-      projects = snapshot.docs.map((d: any) => d.data());
+      const users = await adminDb.collection('users').get();
+      projects = [];
+      for (const userDoc of users.docs) {
+        const snapshot = await userDoc.ref.collection('projects').get();
+        for (const doc of snapshot.docs) {
+          projects.push(doc.data() as any);
+        }
+      }
     } else {
       const snapshot = await adminDb.collection('users').doc(user.uid).collection('projects').get();
       projects = snapshot.docs.map((d: any) => d.data());

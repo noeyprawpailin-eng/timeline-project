@@ -12,10 +12,14 @@ function parseSession(session: string | undefined): { uid: string; role?: string
 }
 
 async function findProjectById(adminDb: any, id: string): Promise<{ ref: any; data: any } | null> {
-  const snapshot = await adminDb.collectionGroup('projects').where('id', '==', id).limit(1).get();
-  if (snapshot.empty) return null;
-  const doc = snapshot.docs[0];
-  return { ref: doc.ref, data: doc.data() };
+  const users = await adminDb.collection('users').get();
+  for (const userDoc of users.docs) {
+    const projectDoc = await userDoc.ref.collection('projects').doc(id).get();
+    if (projectDoc.exists) {
+      return { ref: projectDoc.ref, data: projectDoc.data() };
+    }
+  }
+  return null;
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
