@@ -10,7 +10,8 @@ export async function GET() {
     const doc = await adminDb.doc(DOC_PATH).get();
     const data = doc.data();
     return NextResponse.json({ holidays: data?.holidays || {} });
-  } catch {
+  } catch (e) {
+    console.error('[Holidays GET Error]', e);
     return NextResponse.json({ holidays: {} });
   }
 }
@@ -27,8 +28,9 @@ export async function POST(request: Request) {
       { merge: true }
     );
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to add holiday' }, { status: 500 });
+  } catch (e) {
+    console.error('[Holidays POST Error]', e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Failed to add holiday' }, { status: 500 });
   }
 }
 
@@ -44,7 +46,8 @@ export async function DELETE(request: Request) {
       [`holidays.${date}`]: FieldValue.delete(),
     });
     return NextResponse.json({ success: true });
-  } catch {
-    return NextResponse.json({ error: 'Failed to delete holiday' }, { status: 500 });
+  } catch (e) {
+    console.error('[Holidays DELETE Error]', e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Failed to delete holiday' }, { status: 500 });
   }
 }

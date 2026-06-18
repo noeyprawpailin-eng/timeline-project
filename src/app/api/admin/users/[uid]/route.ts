@@ -14,34 +14,44 @@ function parseSession(session: string | undefined) {
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ uid: string }> }) {
-  const cookieStore = await cookies();
-  const user = parseSession(cookieStore.get('session')?.value);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  try {
+    const cookieStore = await cookies();
+    const user = parseSession(cookieStore.get('session')?.value);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { uid } = await params;
-  const { role, name } = await request.json();
-  const updates: Record<string, string> = {};
-  if (role) updates.role = role;
-  if (name) updates.name = name;
+    const { uid } = await params;
+    const { role, name } = await request.json();
+    const updates: Record<string, string> = {};
+    if (role) updates.role = role;
+    if (name) updates.name = name;
 
-  const adminDb = getAdminDb();
-  await adminDb.collection('users').doc(uid).update(updates);
-  return NextResponse.json({ success: true });
+    const adminDb = getAdminDb();
+    await adminDb.collection('users').doc(uid).update(updates);
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error('[Admin Users PATCH Error]', e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
+  }
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ uid: string }> }) {
-  const cookieStore = await cookies();
-  const user = parseSession(cookieStore.get('session')?.value);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  try {
+    const cookieStore = await cookies();
+    const user = parseSession(cookieStore.get('session')?.value);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-  const { uid } = await params;
-  if (uid === user.uid) {
-    return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
+    const { uid } = await params;
+    if (uid === user.uid) {
+      return NextResponse.json({ error: 'Cannot delete yourself' }, { status: 400 });
+    }
+
+    const adminDb = getAdminDb();
+    await adminDb.collection('users').doc(uid).delete();
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error('[Admin Users DELETE Error]', e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }
-
-  const adminDb = getAdminDb();
-  await adminDb.collection('users').doc(uid).delete();
-  return NextResponse.json({ success: true });
 }

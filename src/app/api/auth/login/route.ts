@@ -46,7 +46,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       user: { uid: userData.uid, email: userData.email, name: userData.name, role: userData.role },
     });
-  } catch {
-    return NextResponse.json({ error: 'เกิดข้อผิดพลาด' }, { status: 500 });
+  } catch (e) {
+    console.error('[Login Error]', e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }
 }

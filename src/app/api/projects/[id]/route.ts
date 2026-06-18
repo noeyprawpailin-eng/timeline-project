@@ -20,59 +20,74 @@ async function findProjectById(adminDb: Firestore, id: string): Promise<{ ref: D
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const cookieStore = await cookies();
-  const user = parseSession(cookieStore.get('session')?.value);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const cookieStore = await cookies();
+    const user = parseSession(cookieStore.get('session')?.value);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id } = await params;
-  const adminDb = getAdminDb();
+    const { id } = await params;
+    const adminDb = getAdminDb();
 
-  if (user.role === 'admin') {
-    const found = await findProjectById(adminDb, id);
-    if (!found) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    return NextResponse.json({ project: found.data });
+    if (user.role === 'admin') {
+      const found = await findProjectById(adminDb, id);
+      if (!found) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      return NextResponse.json({ project: found.data });
+    }
+
+    const doc = await adminDb.collection('users').doc(user.uid).collection('projects').doc(id).get();
+    if (!doc.exists) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json({ project: doc.data() });
+  } catch (e) {
+    console.error('[Project GET Error]', e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }
-
-  const doc = await adminDb.collection('users').doc(user.uid).collection('projects').doc(id).get();
-  if (!doc.exists) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json({ project: doc.data() });
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const cookieStore = await cookies();
-  const user = parseSession(cookieStore.get('session')?.value);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const cookieStore = await cookies();
+    const user = parseSession(cookieStore.get('session')?.value);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id } = await params;
-  const body = await request.json();
-  const adminDb = getAdminDb();
+    const { id } = await params;
+    const body = await request.json();
+    const adminDb = getAdminDb();
 
-  if (user.role === 'admin') {
-    const found = await findProjectById(adminDb, id);
-    if (!found) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    await found.ref.set({ ...body, ownerId: found.data.ownerId || user.uid });
-  } else {
-    await adminDb.collection('users').doc(user.uid).collection('projects').doc(id).set({ ...body, ownerId: user.uid });
+    if (user.role === 'admin') {
+      const found = await findProjectById(adminDb, id);
+      if (!found) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      await found.ref.set({ ...body, ownerId: found.data.ownerId || user.uid });
+    } else {
+      await adminDb.collection('users').doc(user.uid).collection('projects').doc(id).set({ ...body, ownerId: user.uid });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error('[Project PUT Error]', e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true });
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const cookieStore = await cookies();
-  const user = parseSession(cookieStore.get('session')?.value);
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const cookieStore = await cookies();
+    const user = parseSession(cookieStore.get('session')?.value);
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id } = await params;
-  const adminDb = getAdminDb();
+    const { id } = await params;
+    const adminDb = getAdminDb();
 
-  if (user.role === 'admin') {
-    const found = await findProjectById(adminDb, id);
-    if (!found) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    await found.ref.delete();
-  } else {
-    await adminDb.collection('users').doc(user.uid).collection('projects').doc(id).delete();
+    if (user.role === 'admin') {
+      const found = await findProjectById(adminDb, id);
+      if (!found) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      await found.ref.delete();
+    } else {
+      await adminDb.collection('users').doc(user.uid).collection('projects').doc(id).delete();
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error('[Project DELETE Error]', e);
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true });
 }
