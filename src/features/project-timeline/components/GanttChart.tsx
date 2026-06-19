@@ -439,7 +439,36 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
               </div>
               {/* RIGHT HEADER */}
               <div ref={headerScrollRef} data-gantt-right-header className="overflow-hidden bg-white flex-1" style={{ height: HEADER_HEIGHT }}>
-                <div className="flex" style={{ width: totalDays * DAY_WIDTH }}>
+                {/* Month row */}
+                <div className="flex text-[10px] font-bold text-slate-400" style={{ width: totalDays * DAY_WIDTH, height: 18 }}>
+                  {(() => {
+                    const segments: { month: number; year: number; start: number; width: number }[] = [];
+                    let i = 0;
+                    while (i < totalDays) {
+                      const d = addDays(timelineStart, i);
+                      const m = d.getMonth();
+                      const y = d.getFullYear();
+                      const start = i;
+                      let count = 0;
+                      while (i < totalDays) {
+                        const dd = addDays(timelineStart, i);
+                        if (dd.getMonth() !== m || dd.getFullYear() !== y) break;
+                        count++;
+                        i++;
+                      }
+                      segments.push({ month: m, year: y, start, width: count * DAY_WIDTH });
+                    }
+                    return segments.map((seg, si) => (
+                      <div key={si} className="flex items-center justify-center border-r border-slate-100/80 bg-slate-50/50"
+                        style={{ width: seg.width, minWidth: seg.width }}
+                      >
+                        {seg.width > DAY_WIDTH * 2 ? `${THAI_MONTHS[seg.month].replace('.', '')} ${seg.year + 543}` : ''}
+                      </div>
+                    ));
+                  })()}
+                </div>
+                {/* Day row */}
+                <div className="flex" style={{ width: totalDays * DAY_WIDTH, height: 22 }}>
                   {Array.from({ length: totalDays }).map((_, i) => {
                     const date = addDays(timelineStart, i);
                     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
@@ -454,7 +483,6 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                       >
                         <span>{THAI_DAYS[date.getDay()]}</span>
                         <span className="font-semibold">{date.getDate()}</span>
-                        <span className="text-[9px]">{THAI_MONTHS[date.getMonth()]}</span>
                       </div>
                     );
                   })}
@@ -640,6 +668,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                           const isDragging = barDragRef.current?.taskId === task.id;
                           return (
                             <div key={si}
+                              title={task.name}
                               className={`absolute h-8 flex items-center px-2.5 hover:brightness-110 transition-shadow ${readonly ? 'cursor-default' : 'cursor-ew-resize active:shadow-lg'} ${isDragging ? 'shadow-xl brightness-110 z-20' : ''}`}
                               style={{
                                 left: s.startIdx * DAY_WIDTH, width: s.length * DAY_WIDTH, top: barTop,
@@ -648,9 +677,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                                 borderRadius: '8px', boxShadow: `0 2px 6px ${barColor}40`, border: `1px solid ${barLighter}`,
                               }}
                               onMouseDown={(e) => !readonly && handleBarMouseDown(e, task)}
-                            >
-                              <div className="truncate text-xs font-semibold text-white drop-shadow-sm">{si === 0 ? task.name : ''}</div>
-                            </div>
+                            />
                           );
                         });
                       })()}

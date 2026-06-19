@@ -5,11 +5,13 @@ const publicPaths = ['/login', '/register', '/api/auth', '/api/debug', '/api/pro
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hasShare = request.nextUrl.searchParams.has('share');
   const session = request.cookies.get('session')?.value;
 
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/')
-  ) || /^\/api\/projects\/[^/]+\/public$/.test(pathname);
+  ) || /^\/api\/projects\/[^/]+\/public$/.test(pathname)
+  || (pathname === '/' && hasShare);
 
   if (isPublic) {
     return NextResponse.next();
@@ -17,7 +19,7 @@ export function proxy(request: NextRequest) {
 
   if (!session) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
+    loginUrl.searchParams.set('redirect', pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
