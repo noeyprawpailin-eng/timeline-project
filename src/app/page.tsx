@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { HolidayEngine } from '@/core/calendar/HolidayEngine';
+import { formatThaiDate } from '@/lib/formatDate';
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
@@ -82,10 +83,69 @@ export default function Home() {
     const el = document.getElementById('gantt-export-area') as HTMLElement;
     if (!el) return;
 
+    // Target specific overflow-constrained children
+    const leftBody = el.querySelector('[data-gantt-left-body]') as HTMLElement;
+    const rightBody = el.querySelector('[data-gantt-right-body]') as HTMLElement;
+    const overflowChildren = [leftBody, rightBody].filter(Boolean) as HTMLElement[];
+
+    // Collect all ancestors up to body
+    const ancestors: HTMLElement[] = [];
+    let p = el.parentElement;
+    while (p && p !== document.body) {
+      ancestors.push(p);
+      p = p.parentElement;
+    }
+
+    // Save child overflow states
+    const savedChildOverflows = overflowChildren.map(c => ({ overflow: c.style.overflow }));
+
+    // Save ancestor styles
+    const savedAncestors: Record<string, string>[] = [];
+    for (const a of ancestors) {
+      savedAncestors.push({
+        overflow: a.style.overflow,
+        height: a.style.height,
+        maxHeight: a.style.maxHeight,
+        minHeight: a.style.minHeight,
+        flex: a.style.flex,
+      });
+    }
+
+    // Release constraints on children FIRST (so their content contributes to scrollHeight)
+    for (const c of overflowChildren) {
+      c.style.overflow = 'visible';
+    }
+
+    // Release constraints on ancestors
+    for (const a of ancestors) {
+      a.style.overflow = 'visible';
+      a.style.height = 'auto';
+      a.style.maxHeight = 'none';
+      a.style.minHeight = '0';
+      a.style.flex = '0 0 auto';
+    }
+
+    // Remove flex & height constraints from the export area itself
+    el.style.flex = '0 0 auto';
+    el.style.height = 'auto';
+    el.style.minHeight = '0';
+
+    // Now measure full content after all constraints are released
+    const fullH = el.scrollHeight;
+    const fullW = el.scrollWidth;
+
+    // Set explicit pixel heights for capture stability
+    for (const a of ancestors) {
+      a.style.height = fullH + 'px';
+    }
+    el.style.height = fullH + 'px';
+
     try {
       const dataUrl = await toPng(el, {
         quality: 1,
         pixelRatio: 2,
+        width: fullW,
+        height: fullH,
       });
 
       const link = document.createElement('a');
@@ -96,6 +156,21 @@ export default function Home() {
       showToast('ส่งออกสำเร็จ');
     } catch {
       showToast('ส่งออกไม่สำเร็จ');
+    } finally {
+      // Restore child overflows
+      for (let i = 0; i < overflowChildren.length; i++) {
+        overflowChildren[i].style.overflow = savedChildOverflows[i].overflow;
+      }
+      // Restore ancestors
+      for (let i = 0; i < ancestors.length; i++) {
+        const s = savedAncestors[i];
+        const a = ancestors[i];
+        a.style.overflow = s.overflow;
+        a.style.height = s.height;
+        a.style.maxHeight = s.maxHeight;
+        a.style.minHeight = s.minHeight;
+        a.style.flex = s.flex;
+      }
     }
   };
 
@@ -147,7 +222,7 @@ export default function Home() {
       <div className="flex items-center gap-4 px-5 py-2 bg-white border-b border-slate-50 text-[11px] text-slate-400">
         <div className="flex items-center gap-1.5">
           <Calendar size={12} />
-          <span>{new Date(activeProject.startDate).toLocaleDateString('th-TH')} – {new Date(projectEnd).toLocaleDateString('th-TH')}</span>
+          <span>{formatThaiDate(activeProject.startDate)} – {formatThaiDate(projectEnd)}</span>
         </div>
         <span className="text-slate-200">|</span>
         <div className="flex items-center gap-1.5">

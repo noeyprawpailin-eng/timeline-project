@@ -43,20 +43,28 @@ interface ProjectState {
   loading: boolean;
   error: string | null;
 
+  // Undo/Redo
+  undoStack: Project[];
+  redoStack: Project[];
+  pushSnapshot: () => void;
+  undo: () => Promise<void>;
+  redo: () => Promise<void>;
+
   // Lifecycle
   loadProjects: () => Promise<void>;
   setProjects: (projects: Project[]) => void;
 
   // Project Management
-  createProject: (name: string, startDate: string) => Promise<void>;
+  createProject: (name: string, startDate: string, assignees?: { name: string; color: string }[]) => Promise<void>;
   selectProject: (id: string | null) => void;
+  updateAssignees: (id: string, assignees: { name: string; color: string }[], renameMap?: Record<string, string>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   duplicateProject: (id: string) => Promise<void>;
   renameProject: (id: string, name: string) => Promise<void>;
   clearError: () => void;
 
   // Task Management (for active project)
-  updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>;
+  updateTask: (taskId: string, updates: Partial<Task>, skipAutoShift?: boolean) => Promise<void>;
   updateProject: (updates: Partial<Project>) => Promise<void>;
   addTask: (task: Task) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
@@ -85,6 +93,46 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   globalHolidays: INITIAL_THAI_HOLIDAYS,
   loading: true,
   error: null,
+  undoStack: [],
+  redoStack: [],
+
+  pushSnapshot: () => {
+    const { projects, activeProjectId } = get();
+    const project = projects.find(p => p.id === activeProjectId);
+    if (!project) return;
+    set((s) => ({
+      undoStack: [...s.undoStack.slice(-49), JSON.parse(JSON.stringify(project))],
+      redoStack: [],
+    }));
+  },
+
+  undo: async () => {
+    const { projects, activeProjectId, undoStack, redoStack } = get();
+    if (undoStack.length === 0 || !activeProjectId) return;
+    const snapshot = undoStack[undoStack.length - 1];
+    const current = projects.find(p => p.id === activeProjectId);
+    if (!current) return;
+    set({
+      projects: projects.map(p => p.id === activeProjectId ? snapshot : p),
+      undoStack: undoStack.slice(0, -1),
+      redoStack: [...redoStack, JSON.parse(JSON.stringify(current))],
+    });
+    syncProject(snapshot);
+  },
+
+  redo: async () => {
+    const { projects, activeProjectId, undoStack, redoStack } = get();
+    if (redoStack.length === 0 || !activeProjectId) return;
+    const snapshot = redoStack[redoStack.length - 1];
+    const current = projects.find(p => p.id === activeProjectId);
+    if (!current) return;
+    set({
+      projects: projects.map(p => p.id === activeProjectId ? snapshot : p),
+      undoStack: [...undoStack, JSON.parse(JSON.stringify(current))],
+      redoStack: redoStack.slice(0, -1),
+    });
+    syncProject(snapshot);
+  },
 
   loadProjects: async () => {
     try {
@@ -107,7 +155,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   setProjects: (projects) => set({ projects }),
 
-  createProject: async (name, startDate) => {
+  createProject: async (name, startDate, assignees?) => {
     const id = `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const newProject = TimelineService.calculateTimeline({
       id,
@@ -115,6 +163,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       startDate,
       config: { workingDays: [1, 2, 3, 4, 5], holidays: { ...get().globalHolidays } },
       tasks: [],
+      assignees: assignees || [],
     });
 
     await firestoreService.createProject(newProject);
@@ -126,6 +175,31 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   selectProject: (id) => set({ activeProjectId: id }),
   clearError: () => set({ error: null }),
+
+  updateAssignees: async (id, assignees, renameMap?) => {
+    try {
+      get().pushSnapshot();
+      const state = get();
+      const project = state.projects.find(p => p.id === id);
+      if (!project) return;
+      let tasks = project.tasks;
+      if (renameMap) {
+        tasks = tasks.map(t => {
+          const newName = t.assignee ? renameMap[t.assignee] : undefined;
+          return newName ? { ...t, assignee: newName } : t;
+        });
+      }
+      const updated = TimelineService.calculateTimeline({ ...project, assignees, tasks });
+      await firestoreService.saveProject(id, updated);
+      set((s) => ({
+        projects: s.projects.map(p => p.id === id ? updated : p),
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error('[Update Assignees Error]', msg);
+      set({ error: msg });
+    }
+  },
 
   deleteProject: async (id) => {
     try {
@@ -171,6 +245,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   renameProject: async (id, name) => {
     try {
+      get().pushSnapshot();
       const state = get();
       const project = state.projects.find(p => p.id === id);
       if (!project) return;
@@ -191,7 +266,8 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     return projects.find(p => p.id === activeProjectId);
   },
 
-  updateTask: async (taskId, updates) => {
+  updateTask: async (taskId, updates, skipAutoShift) => {
+    get().pushSnapshot();
     const state = get();
     const activeProject = state.projects.find(p => p.id === state.activeProjectId);
     if (!activeProject) return;
@@ -205,7 +281,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     );
     let updatedProject = TimelineService.calculateTimeline({ ...activeProject, tasks: updatedTasks });
 
-    if (taskIndex >= 0 && oldTask?.calculatedEndDate) {
+    if (taskIndex >= 0 && oldTask?.calculatedEndDate && !skipAutoShift) {
       const newTask = updatedProject.tasks.find(t => t.id === taskId);
       if (newTask?.calculatedEndDate) {
         const delta = daysDiff(newTask.calculatedEndDate, oldTask.calculatedEndDate);
@@ -228,6 +304,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   updateProject: async (updates) => {
+    get().pushSnapshot();
     const state = get();
     const activeProject = state.projects.find(p => p.id === state.activeProjectId);
     if (!activeProject) return;
@@ -240,6 +317,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   addTask: async (task) => {
+    get().pushSnapshot();
     const state = get();
     const activeProject = state.projects.find(p => p.id === state.activeProjectId);
     if (!activeProject) return;
@@ -255,6 +333,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   deleteTask: async (taskId) => {
+    get().pushSnapshot();
     const state = get();
     const activeProject = state.projects.find(p => p.id === state.activeProjectId);
     if (!activeProject) return;
@@ -285,6 +364,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   reorderTask: async (taskId, targetTaskId, position) => {
+    get().pushSnapshot();
     const state = get();
     const project = state.projects.find(p => p.id === state.activeProjectId);
     if (!project) return;

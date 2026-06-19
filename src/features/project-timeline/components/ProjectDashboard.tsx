@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Briefcase, Calendar, List, Search, Shield, LogOut } from 'lucide-react';
+import { Plus, Briefcase, Calendar, List, Search, Shield, LogOut, Users } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectCard } from './ProjectCard';
+import type { Assignee } from '../../../types/project';
 
 export const ProjectDashboard: React.FC = () => {
   const { projects, createProject, globalHolidays, addGlobalHoliday, removeGlobalHoliday, loading, error, clearError } = useProjectStore();
@@ -16,7 +17,14 @@ export const ProjectDashboard: React.FC = () => {
   const [holidayDate, setHolidayDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [holidayName, setHolidayName] = useState('');
   const [showHolidaysList, setShowHolidaysList] = useState(false);
+  const [editingHolidayDate, setEditingHolidayDate] = useState<string | null>(null);
+  const [editingHolidayName, setEditingHolidayName] = useState('');
+  const [editingHolidayNewDate, setEditingHolidayNewDate] = useState('');
+  const [newAssigneeName, setNewAssigneeName] = useState('');
+  const [newAssigneeColor, setNewAssigneeColor] = useState('#3b82f6');
+  const [assignees, setAssignees] = useState<Assignee[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const ASSIGNEE_COLORS = ['#3b82f6','#10b981','#ef4444','#f97316','#eab308','#8b5cf6','#ec4899','#06b6d4','#6b7280','#6366f1'];
 
   const filteredProjects = projects.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -25,8 +33,9 @@ export const ProjectDashboard: React.FC = () => {
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!projectName.trim()) return;
-    createProject(projectName, startDate);
+    createProject(projectName, startDate, assignees.length > 0 ? assignees : undefined);
     setProjectName('');
+    setAssignees([]);
   };
 
   if (loading) {
@@ -112,6 +121,38 @@ export const ProjectDashboard: React.FC = () => {
                     className="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   />
                 </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">ผู้รับผิดชอบ</label>
+                  <div className="flex items-center gap-2">
+                    <input type="text" value={newAssigneeName} onChange={(e) => setNewAssigneeName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (newAssigneeName.trim()) { if (!assignees.some(a => a.name === newAssigneeName.trim())) { setAssignees([...assignees, { name: newAssigneeName.trim(), color: newAssigneeColor }]); } setNewAssigneeName(''); } } }}
+                      placeholder="ชื่อผู้รับผิดชอบ"
+                      className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500"
+                    />
+                    <div className="flex items-center gap-0.5">
+                      {ASSIGNEE_COLORS.map(c => (
+                        <button key={c} type="button" onClick={() => setNewAssigneeColor(c)}
+                          className={`w-4 h-4 rounded-full border ${newAssigneeColor === c ? 'border-slate-800 scale-110' : 'border-transparent'}`}
+                          style={{ background: c }} />
+                      ))}
+                    </div>
+                    <button type="button" onClick={() => { if (newAssigneeName.trim()) { if (!assignees.some(a => a.name === newAssigneeName.trim())) { setAssignees([...assignees, { name: newAssigneeName.trim(), color: newAssigneeColor }]); } setNewAssigneeName(''); } }}
+                      disabled={!newAssigneeName.trim()}
+                      className="px-2.5 py-2 bg-violet-500 disabled:opacity-40 text-white text-xs font-bold rounded-lg hover:bg-violet-600 transition-all">เพิ่ม</button>
+                  </div>
+                  {assignees.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {assignees.map(a => (
+                        <span key={a.name} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold text-white" style={{ background: a.color }}>
+                          {a.name}
+                          <button type="button" onClick={() => setAssignees(assignees.filter(x => x.name !== a.name))} className="text-white/70 hover:text-white">&times;</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex items-end gap-3">
                   <div className="flex-1 flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">วันที่เริ่ม</label>
@@ -193,16 +234,49 @@ export const ProjectDashboard: React.FC = () => {
                     <div className="max-h-52 overflow-y-auto space-y-1.5 pl-1">
                       {Object.entries(globalHolidays).sort(([a], [b]) => a.localeCompare(b)).map(([date, name]) => (
                         <div key={date} className="flex items-center justify-between py-1.5 px-2.5 bg-slate-50 rounded-md group">
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="font-mono font-medium text-slate-500">{date}</span>
-                            <span className="text-slate-700 font-medium">{name}</span>
-                          </div>
-                          <button
-                            onClick={() => removeGlobalHoliday(date)}
-                            className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-all text-xs font-bold leading-none"
-                          >
-                            ✕
-                          </button>
+                          {editingHolidayDate === date ? (
+                            <div className="flex items-center gap-1.5 flex-1">
+                              <input type="date" value={editingHolidayNewDate}
+                                onChange={(e) => setEditingHolidayNewDate(e.target.value)}
+                                className="w-32 px-2 py-1 bg-white border border-amber-200 rounded text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                              />
+                              <input type="text" value={editingHolidayName}
+                                onChange={(e) => setEditingHolidayName(e.target.value)}
+                                onBlur={() => {
+                                  if (editingHolidayName.trim() && editingHolidayNewDate) {
+                                    const oldDate = date;
+                                    const newDate = editingHolidayNewDate;
+                                    const newName = editingHolidayName.trim();
+                                    if (newDate !== oldDate || newName !== name) {
+                                      removeGlobalHoliday(oldDate);
+                                      addGlobalHoliday(newDate, newName);
+                                    }
+                                  }
+                                  setEditingHolidayDate(null);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                                  if (e.key === 'Escape') setEditingHolidayDate(null);
+                                }}
+                                className="flex-1 px-2 py-1 bg-white border border-amber-200 rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-xs flex-1 cursor-pointer"
+                              onClick={() => { setEditingHolidayDate(date); setEditingHolidayName(name); setEditingHolidayNewDate(date); }}>
+                              <span className="font-mono font-medium text-slate-500">{date}</span>
+                              <span className="text-slate-700 font-medium">{name}</span>
+                            </div>
+                          )}
+                          {editingHolidayDate !== date && (
+                            <button
+                              onClick={() => removeGlobalHoliday(date)}
+                              className="text-red-400 opacity-0 group-hover:opacity-100 hover:text-red-600 transition-all text-xs font-bold leading-none"
+                            >
+                              ✕
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
