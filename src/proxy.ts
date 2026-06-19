@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const publicPaths = ['/login', '/register', '/api/auth', '/api/debug'];
+const publicPaths = ['/login', '/register', '/api/auth', '/api/debug', '/api/projects/public'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -9,7 +9,7 @@ export function proxy(request: NextRequest) {
 
   const isPublic = publicPaths.some(
     (p) => pathname === p || pathname.startsWith(p + '/')
-  );
+  ) || /^\/api\/projects\/[^/]+\/public$/.test(pathname);
 
   if (isPublic) {
     return NextResponse.next();

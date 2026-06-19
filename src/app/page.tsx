@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { GanttChart } from '@/features/project-timeline/components/GanttChart';
@@ -14,45 +14,80 @@ import {
   Share2,
   Eye,
   Download,
+  EyeOff,
+  Lock,
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { HolidayEngine } from '@/core/calendar/HolidayEngine';
 import { formatThaiDate } from '@/lib/formatDate';
+import type { Project } from '@/types/project';
 
 export default function Home() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const { activeProjectId, selectProject, getActiveProject, loadProjects, loading: storeLoading } = useProjectStore();
+  const { activeProjectId, selectProject, getActiveProject, setActiveProject, loadProjects, loading: storeLoading } = useProjectStore();
   const activeProject = getActiveProject();
   const [toast, setToast] = useState<string | null>(null);
   const [isReadonly, setIsReadonly] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [authLoading, user, router]);
-
-  useEffect(() => {
-    if (!authLoading && user) {
-      loadProjects();
-    }
-  }, [authLoading, user?.uid, loadProjects]);
+  // Handle ?share= (public read-only) and ?edit= (auth required)
+  const hasShareParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).has('share') : false;
+  const hasEditParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).has('edit') : false;
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shareId = params.get('share');
+    const editId = params.get('edit');
+
     if (shareId) {
-      selectProject(shareId);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsReadonly(true);
+      fetch(`/api/projects/${shareId}/public`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.project) {
+            setActiveProject({ ...data.project, id: shareId } as Project);
+          }
+        })
+        .catch(() => {});
+    } else if (editId) {
+      if (!authLoading && !user) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname + '?edit=' + editId));
+        return;
+      }
+      selectProject(editId);
     }
-  }, [selectProject]);
+  }, [selectProject, setActiveProject, authLoading, user, router]);
+
+  useEffect(() => {
+    if (!authLoading && !user && !hasShareParam) {
+      router.push('/login');
+    }
+  }, [authLoading, user, router, hasShareParam]);
+
+  useEffect(() => {
+    if (!authLoading && user && !hasShareParam) {
+      loadProjects();
+    }
+  }, [authLoading, user?.uid, loadProjects, hasShareParam]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (shareRef.current && !shareRef.current.contains(e.target as Node)) {
+        setShowShareMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   if (authLoading || storeLoading) return null;
-  if (!user) return null;
+  if (!user && !hasShareParam) return null;
+  if (!user && hasShareParam && !activeProject) return null;
 
   if (!activeProjectId || !activeProject) {
+    if (hasShareParam) return null;
     return <ProjectDashboard />;
   }
 
@@ -69,14 +104,16 @@ export default function Home() {
     setTimeout(() => setToast(null), 2000);
   };
 
-  const handleShare = async () => {
-    const url = `${window.location.origin}${window.location.pathname}?share=${activeProject.id}`;
+  const handleShare = async (mode: 'readonly' | 'editable') => {
+    const param = mode === 'readonly' ? 'share' : 'edit';
+    const url = `${window.location.origin}${window.location.pathname}?${param}=${activeProject.id}`;
     try {
       await navigator.clipboard.writeText(url);
-      showToast('คัดลอกลิงค์แล้ว');
+      showToast(mode === 'readonly' ? 'คัดลอกลิงค์ (ดูอย่างเดียว) แล้ว' : 'คัดลอกลิงค์ (แก้ไขได้) แล้ว');
     } catch {
       showToast('ไม่สามารถคัดลอกได้');
     }
+    setShowShareMenu(false);
   };
 
   const handleExport = async () => {
@@ -235,10 +272,31 @@ export default function Home() {
               <span className="hidden sm:inline">ส่งออก</span>
             </button>
           )}
-          <button onClick={handleShare} className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all active:scale-95">
-            <Share2 size={15} />
-            <span className="hidden sm:inline">แชร์</span>
-          </button>
+          <div className="relative" ref={shareRef}>
+            <button onClick={() => setShowShareMenu(v => !v)} className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all active:scale-95">
+              <Share2 size={15} />
+              <span className="hidden sm:inline">แชร์</span>
+            </button>
+            {showShareMenu && (
+              <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
+                <button onClick={() => handleShare('readonly')} className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                  <EyeOff size={16} className="text-slate-400 shrink-0" />
+                  <div>
+                    <div>ดูอย่างเดียว</div>
+                    <div className="text-[10px] font-normal text-slate-400">ไม่ต้องเข้าสู่ระบบ</div>
+                  </div>
+                </button>
+                <div className="mx-3 h-px bg-slate-100" />
+                <button onClick={() => handleShare('editable')} className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors text-left">
+                  <Lock size={16} className="text-slate-400 shrink-0" />
+                  <div>
+                    <div>แก้ไขได้</div>
+                    <div className="text-[10px] font-normal text-slate-400">ต้องเข้าสู่ระบบก่อน</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
@@ -257,10 +315,14 @@ export default function Home() {
           <Layout size={12} />
           <span>{activeProject.tasks.length} งาน</span>
         </div>
-        <span className="text-slate-200">|</span>
-        <div className="flex items-center gap-1.5 text-slate-500">
-          {user?.name || user?.email}
-        </div>
+        {user && (
+          <>
+            <span className="text-slate-200">|</span>
+            <div className="flex items-center gap-1.5 text-slate-500">
+              {user?.name || user?.email}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="flex-1 p-4 pt-3 overflow-auto">

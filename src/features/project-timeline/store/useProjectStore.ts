@@ -53,6 +53,7 @@ interface ProjectState {
   // Lifecycle
   loadProjects: () => Promise<void>;
   setProjects: (projects: Project[]) => void;
+  setActiveProject: (project: Project) => void;
 
   // Project Management
   createProject: (name: string, startDate: string, assignees?: { name: string; color: string }[]) => Promise<void>;
@@ -154,6 +155,12 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
   },
 
   setProjects: (projects) => set({ projects }),
+  setActiveProject: (project: Project) => set((state) => ({
+    projects: state.projects.some(p => p.id === project.id)
+      ? state.projects.map(p => p.id === project.id ? project : p)
+      : [...state.projects, project],
+    activeProjectId: project.id,
+  })),
 
   createProject: async (name, startDate, assignees?) => {
     const id = `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
