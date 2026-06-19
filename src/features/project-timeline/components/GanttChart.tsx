@@ -413,7 +413,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
           </div>
         </div>
 
-        <div id="gantt-export-area" className="flex-1 flex flex-col min-h-0">
+        <div id="gantt-export-area" className="flex-1 flex flex-col min-h-0 bg-white">
           <div className="px-4 py-1.5 border-b border-slate-100 bg-slate-50">
             <span className="text-[11px] font-bold text-slate-500">{project.name}</span>
           </div>

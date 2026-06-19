@@ -148,6 +148,7 @@ export default function Home() {
         pixelRatio: 2,
         width: fullW,
         height: fullH,
+        backgroundColor: '#ffffff',
       });
 
       const link = document.createElement('a');
