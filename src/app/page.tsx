@@ -83,11 +83,6 @@ export default function Home() {
     const el = document.getElementById('gantt-export-area') as HTMLElement;
     if (!el) return;
 
-    // Target specific overflow-constrained children
-    const leftBody = el.querySelector('[data-gantt-left-body]') as HTMLElement;
-    const rightBody = el.querySelector('[data-gantt-right-body]') as HTMLElement;
-    const overflowChildren = [leftBody, rightBody].filter(Boolean) as HTMLElement[];
-
     // Collect all ancestors up to body
     const ancestors: HTMLElement[] = [];
     let p = el.parentElement;
@@ -95,9 +90,6 @@ export default function Home() {
       ancestors.push(p);
       p = p.parentElement;
     }
-
-    // Save child overflow states
-    const savedChildOverflows = overflowChildren.map(c => ({ overflow: c.style.overflow }));
 
     // Save ancestor styles
     const savedAncestors: Record<string, string>[] = [];
@@ -111,12 +103,7 @@ export default function Home() {
       });
     }
 
-    // Release constraints on children FIRST (so their content contributes to scrollHeight)
-    for (const c of overflowChildren) {
-      c.style.overflow = 'visible';
-    }
-
-    // Release constraints on ancestors
+    // Release constraints on ancestors so the export area can grow
     for (const a of ancestors) {
       a.style.overflow = 'visible';
       a.style.height = 'auto';
@@ -125,20 +112,35 @@ export default function Home() {
       a.style.flex = '0 0 auto';
     }
 
-    // Remove flex & height constraints from the export area itself
+    // Also unconstrain the export area itself
+    const savedElFlex = el.style.flex;
+    const savedElHeight = el.style.height;
+    const savedElMinH = el.style.minHeight;
     el.style.flex = '0 0 auto';
     el.style.height = 'auto';
     el.style.minHeight = '0';
 
-    // Now measure full content after all constraints are released
+    // Calculate full height: header + all visible task rows
+    const leftBody = el.querySelector('[data-gantt-left-body]') as HTMLElement;
+    if (leftBody) {
+      leftBody.style.overflow = 'visible';
+    }
+
+    // Let layout settle
+    await new Promise(r => requestAnimationFrame(r));
+
+    // Now measure the full content
     const fullH = el.scrollHeight;
     const fullW = el.scrollWidth;
 
-    // Set explicit pixel heights for capture stability
+    // Lock sizes for stable capture
     for (const a of ancestors) {
       a.style.height = fullH + 'px';
     }
     el.style.height = fullH + 'px';
+
+    // Wait for layout to settle again
+    await new Promise(r => requestAnimationFrame(r));
 
     try {
       const dataUrl = await toPng(el, {
@@ -157,10 +159,14 @@ export default function Home() {
     } catch {
       showToast('ส่งออกไม่สำเร็จ');
     } finally {
-      // Restore child overflows
-      for (let i = 0; i < overflowChildren.length; i++) {
-        overflowChildren[i].style.overflow = savedChildOverflows[i].overflow;
+      // Restore left body overflow
+      if (leftBody) {
+        leftBody.style.overflow = '';
       }
+      // Restore export area
+      el.style.flex = savedElFlex;
+      el.style.height = savedElHeight;
+      el.style.minHeight = savedElMinH;
       // Restore ancestors
       for (let i = 0; i < ancestors.length; i++) {
         const s = savedAncestors[i];
