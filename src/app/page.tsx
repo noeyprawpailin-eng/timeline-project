@@ -43,6 +43,7 @@ export default function Home() {
 
     if (shareId) {
       setIsReadonly(true);
+      useProjectStore.setState({ loading: false });
       fetch(`/api/projects/${shareId}/public`)
         .then(r => r.json())
         .then(data => {
@@ -281,18 +282,12 @@ export default function Home() {
               <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 overflow-hidden">
                 <button onClick={() => handleShare('readonly')} className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors text-left">
                   <EyeOff size={16} className="text-slate-400 shrink-0" />
-                  <div>
-                    <div>ดูอย่างเดียว</div>
-                    <div className="text-[10px] font-normal text-slate-400">ไม่ต้องเข้าสู่ระบบ</div>
-                  </div>
+                  ดูอย่างเดียว
                 </button>
                 <div className="mx-3 h-px bg-slate-100" />
                 <button onClick={() => handleShare('editable')} className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors text-left">
                   <Lock size={16} className="text-slate-400 shrink-0" />
-                  <div>
-                    <div>แก้ไขได้</div>
-                    <div className="text-[10px] font-normal text-slate-400">ต้องเข้าสู่ระบบก่อน</div>
-                  </div>
+                  แก้ไขได้
                 </button>
               </div>
             )}
