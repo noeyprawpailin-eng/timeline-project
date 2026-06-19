@@ -120,10 +120,14 @@ export default function Home() {
     el.style.height = 'auto';
     el.style.minHeight = '0';
 
-    // Calculate full height: header + all visible task rows
-    const leftBody = el.querySelector('[data-gantt-left-body]') as HTMLElement;
-    if (leftBody) {
-      leftBody.style.overflow = 'visible';
+    // Release overflow constraints on children that clip content
+    const exportChildren: { el: HTMLElement; savedOverflow: string }[] = [];
+    for (const sel of ['[data-gantt-left-body]', '[data-gantt-right-body]']) {
+      const child = el.querySelector(sel) as HTMLElement | null;
+      if (child) {
+        exportChildren.push({ el: child, savedOverflow: child.style.overflow });
+        child.style.overflow = 'visible';
+      }
     }
 
     // Let layout settle
@@ -160,9 +164,9 @@ export default function Home() {
     } catch {
       showToast('ส่งออกไม่สำเร็จ');
     } finally {
-      // Restore left body overflow
-      if (leftBody) {
-        leftBody.style.overflow = '';
+      // Restore child overflow
+      for (const c of exportChildren) {
+        c.el.style.overflow = c.savedOverflow;
       }
       // Restore export area
       el.style.flex = savedElFlex;
