@@ -438,7 +438,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                 </>}
               </div>
               {/* RIGHT HEADER */}
-              <div ref={headerScrollRef} className="overflow-hidden bg-white flex-1" style={{ height: HEADER_HEIGHT }}>
+              <div ref={headerScrollRef} data-gantt-right-header className="overflow-hidden bg-white flex-1" style={{ height: HEADER_HEIGHT }}>
                 <div className="flex" style={{ width: totalDays * DAY_WIDTH }}>
                   {Array.from({ length: totalDays }).map((_, i) => {
                     const date = addDays(timelineStart, i);

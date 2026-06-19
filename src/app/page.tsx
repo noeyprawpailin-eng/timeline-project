@@ -121,12 +121,23 @@ export default function Home() {
     el.style.minHeight = '0';
 
     // Release overflow constraints on children that clip content
-    const exportChildren: { el: HTMLElement; savedOverflow: string }[] = [];
-    for (const sel of ['[data-gantt-left-body]', '[data-gantt-right-body]']) {
+    const exportChildren: { el: HTMLElement; savedOverflow: string; savedWidth?: string }[] = [];
+    for (const sel of ['[data-gantt-left-body]', '[data-gantt-right-body]', '[data-gantt-right-header]']) {
       const child = el.querySelector(sel) as HTMLElement | null;
       if (child) {
-        exportChildren.push({ el: child, savedOverflow: child.style.overflow });
+        exportChildren.push({
+          el: child,
+          savedOverflow: child.style.overflow,
+          savedWidth: child.style.width,
+        });
         child.style.overflow = 'visible';
+        // Expand RIGHT HEADER width to show all dates
+        if (sel === '[data-gantt-right-header]') {
+          const inner = child.firstElementChild as HTMLElement | null;
+          if (inner) {
+            child.style.width = inner.offsetWidth + 'px';
+          }
+        }
       }
     }
 
@@ -167,6 +178,7 @@ export default function Home() {
       // Restore child overflow
       for (const c of exportChildren) {
         c.el.style.overflow = c.savedOverflow;
+        if (c.savedWidth !== undefined) c.el.style.width = c.savedWidth;
       }
       // Restore export area
       el.style.flex = savedElFlex;
