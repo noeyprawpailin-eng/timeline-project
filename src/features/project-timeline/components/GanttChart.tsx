@@ -6,6 +6,7 @@ import { differenceInDays, addDays } from 'date-fns';
 import { Task } from '../../../types/project';
 import { TaskEditModal } from './TaskEditModal';
 import { Plus, Calendar, ChevronDown, ChevronRight, GripVertical, List, Layers, Undo2, Redo2 } from 'lucide-react';
+import { formatThaiDate } from '../../../lib/formatDate';
 
 const THAI_DAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
 const THAI_MONTHS = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
@@ -442,7 +443,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                 {/* Month row */}
                 <div className="flex text-[10px] font-bold text-slate-400" style={{ width: totalDays * DAY_WIDTH, height: 18 }}>
                   {(() => {
-                    const segments: { month: number; year: number; start: number; width: number }[] = [];
+                    const segments: { month: number; year: number; start: number; width: number; isLast: boolean }[] = [];
                     let i = 0;
                     while (i < totalDays) {
                       const d = addDays(timelineStart, i);
@@ -456,13 +457,13 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                         count++;
                         i++;
                       }
-                      segments.push({ month: m, year: y, start, width: count * DAY_WIDTH });
+                      segments.push({ month: m, year: y, start, width: count * DAY_WIDTH, isLast: i >= totalDays });
                     }
                     return segments.map((seg, si) => (
-                      <div key={si} className="flex items-center justify-center border-r border-slate-100/80 bg-slate-50/50"
+                      <div key={si} className={`flex items-center justify-center bg-slate-50/50 text-[10px] font-bold text-slate-500 ${si < segments.length - 1 ? 'border-r-2 border-r-slate-300' : 'border-r border-slate-100/80'}`}
                         style={{ width: seg.width, minWidth: seg.width }}
                       >
-                        {seg.width > DAY_WIDTH * 2 ? `${THAI_MONTHS[seg.month].replace('.', '')} ${seg.year + 543}` : ''}
+                        {`${THAI_MONTHS[seg.month].replace('.', '')} ${seg.year + 543}`}
                       </div>
                     ));
                   })()}
@@ -668,7 +669,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                           const isDragging = barDragRef.current?.taskId === task.id;
                           return (
                             <div key={si}
-                              title={task.name}
+                              title={`${task.name}\n${formatThaiDate(task.calculatedStartDate!)} – ${formatThaiDate(task.calculatedEndDate!)}`}
                               className={`absolute h-8 flex items-center px-2.5 hover:brightness-110 transition-shadow ${readonly ? 'cursor-default' : 'cursor-ew-resize active:shadow-lg'} ${isDragging ? 'shadow-xl brightness-110 z-20' : ''}`}
                               style={{
                                 left: s.startIdx * DAY_WIDTH, width: s.length * DAY_WIDTH, top: barTop,
