@@ -6,7 +6,6 @@ import { Plus, Briefcase, Calendar, List, Search, Shield, LogOut, Users, Check, 
 import { useProjectStore } from '../store/useProjectStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectCard } from './ProjectCard';
-import { formatThaiDate } from '@/lib/formatDate';
 import type { Assignee } from '../../../types/project';
 
 export const ProjectDashboard: React.FC = () => {
@@ -26,6 +25,11 @@ export const ProjectDashboard: React.FC = () => {
   const [assignees, setAssignees] = useState<Assignee[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const ASSIGNEE_COLORS = ['#3b82f6','#10b981','#ef4444','#f97316','#eab308','#8b5cf6','#ec4899','#06b6d4','#6b7280','#6366f1'];
+
+  const formatHolidayDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-');
+    return `${parseInt(d)}/${m}/${parseInt(y) + 543}`;
+  };
 
   const filteredProjects = projects.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -233,7 +237,7 @@ export const ProjectDashboard: React.FC = () => {
 
                   {showHolidaysList && (
                     <div className="max-h-52 overflow-y-auto space-y-1.5 pl-1">
-                      {Object.entries(globalHolidays).sort(([a], [b]) => a.localeCompare(b)).map(([date, name]) => (
+                      {Object.entries(globalHolidays).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime()).map(([date, name]) => (
                         <div key={date} className="flex items-center justify-between py-1.5 px-2.5 bg-slate-50 rounded-md group">
                           {editingHolidayDate === date ? (
                             <div className="flex items-center gap-1.5 flex-1">
@@ -286,7 +290,7 @@ export const ProjectDashboard: React.FC = () => {
                           ) : (
                             <div className="flex items-center gap-2 text-xs flex-1 cursor-pointer"
                               onClick={() => { setEditingHolidayDate(date); setEditingHolidayName(name); setEditingHolidayNewDate(date); }}>
-                              <span className="font-medium text-slate-500">{formatThaiDate(date)}</span>
+                              <span className="font-medium text-slate-500">{formatHolidayDate(date)}</span>
                               <span className="text-slate-700 font-medium">{name}</span>
                             </div>
                           )}
