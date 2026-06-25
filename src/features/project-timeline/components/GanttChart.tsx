@@ -639,7 +639,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                       {hasCalc && (() => {
                         const start = new Date(task.calculatedStartDate!);
                         const end = new Date(task.calculatedEndDate!);
-                        const barTop = (ROW_HEIGHT - 32) / 2;
+                        const barTop = (ROW_HEIGHT - 20) / 2;
 
                         const dayIndices: number[] = [];
                         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
@@ -671,9 +671,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                           return (
                             <div key={si}
                               title={`${task.name}\n${formatThaiDate(task.calculatedStartDate!)} – ${formatThaiDate(task.calculatedEndDate!)}`}
-                              className={`absolute h-8 flex items-center px-2.5 hover:brightness-110 transition-shadow ${readonly ? 'cursor-default' : 'cursor-ew-resize active:shadow-lg'} ${isDragging ? 'shadow-xl brightness-110 z-20' : ''}`}
+                              className={`absolute flex items-center px-2 hover:brightness-110 transition-shadow ${readonly ? 'cursor-default' : 'cursor-ew-resize active:shadow-lg'} ${isDragging ? 'shadow-xl brightness-110 z-20' : ''}`}
                               style={{
-                                left: s.startIdx * DAY_WIDTH, width: s.length * DAY_WIDTH, top: barTop,
+                                left: s.startIdx * DAY_WIDTH, width: s.length * DAY_WIDTH, top: barTop, height: 20,
                                 transform: isDragging && barDragOffset ? `translateX(${barDragOffset * DAY_WIDTH}px)` : '',
                                 background: `linear-gradient(135deg, ${barColor}, ${lightenColor(barColor, 30)})`,
                                 borderRadius: '8px', boxShadow: `0 2px 6px ${barColor}40`, border: `1px solid ${barLighter}`,
