@@ -380,7 +380,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
 
   return (
     <>
-      <div className="flex-1 bg-white rounded-xl border border-slate-200/80 card-shadow flex flex-col" style={{ overflow: 'clip' }}>
+      <div className="flex-1 bg-white rounded-xl border border-slate-200/80 card-shadow flex flex-col min-h-0" style={{ overflow: 'clip' }}>
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-gradient-to-r from-slate-50/90 to-white">
           <div className="flex items-center gap-3">
             {!readonly && (
