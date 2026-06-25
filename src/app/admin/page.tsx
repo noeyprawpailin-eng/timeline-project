@@ -216,22 +216,6 @@ export default function AdminPage() {
             <p className="mt-2 text-[11px] text-slate-400">รวมทุกโปรเจคในระบบ</p>
           </div>
 
-          <div className="relative overflow-hidden rounded-xl bg-white border border-slate-200/70 p-5 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-emerald-100/60 to-transparent rounded-bl-full" />
-            <div className="relative flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-emerald-500 mb-0.5">
-                  <Users size={16} />
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">ผู้ดูแลระบบ</span>
-                </div>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{users.filter(u => u.role === 'admin').length}</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <Shield size={18} className="text-emerald-600" />
-              </div>
-            </div>
-            <p className="mt-2 text-[11px] text-slate-400">จาก {users.filter(u => u.role !== 'admin').length} ผู้ใช้ทั้งหมด</p>
-          </div>
         </div>
 
         {error && (
@@ -373,12 +357,6 @@ export default function AdminPage() {
                 <p className="text-sm text-slate-400 font-medium">ไม่พบผู้ใช้</p>
               </div>
             )}
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-between px-5 py-3 bg-slate-50/50 border-t border-slate-100">
-            <span className="text-[11px] text-slate-400">ทั้งหมด {users.filter(u => u.role !== 'admin').length} คน</span>
-            <span className="text-[11px] text-slate-400">แสดง {filtered.length} คน</span>
           </div>
         </div>
       </div>
