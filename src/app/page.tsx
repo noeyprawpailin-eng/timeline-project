@@ -320,7 +320,7 @@ export default function Home() {
         )}
       </div>
 
-      <div className="flex-1 p-4 pt-3 overflow-auto">
+      <div className="flex flex-col flex-1 p-4 pt-3 overflow-hidden">
         <GanttChart readonly={isReadonly} />
       </div>
 
