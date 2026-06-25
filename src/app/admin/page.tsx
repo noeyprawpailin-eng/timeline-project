@@ -26,6 +26,7 @@ interface AdminUser {
   name: string;
   role: 'admin' | 'user';
   createdAt: string;
+  projectCount: number;
 }
 
 export default function AdminPage() {
@@ -320,9 +321,10 @@ export default function AdminPage() {
           {/* User List Header */}
           <div className="hidden sm:flex items-center gap-3 px-5 py-2 bg-slate-50/80 border-b border-slate-100">
             <div className="w-8 shrink-0" />
-            <div className="flex-1 grid grid-cols-2 gap-2">
+            <div className="flex-1 grid grid-cols-3 gap-2">
               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">ชื่อผู้ใช้</span>
               <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">อีเมล</span>
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">โปรเจค</span>
             </div>
             <div className="w-[168px] shrink-0" />
           </div>
@@ -334,7 +336,7 @@ export default function AdminPage() {
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm ${u.role === 'admin' ? 'bg-gradient-to-br from-violet-500 to-purple-600' : 'bg-gradient-to-br from-slate-400 to-slate-500'}`}>
                   {u.name.charAt(0).toUpperCase()}
                 </div>
-                <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 items-center">
+                <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 items-center">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm font-semibold text-slate-900 truncate">{u.name}</span>
                     {u.role === 'admin' && (
@@ -344,6 +346,7 @@ export default function AdminPage() {
                     )}
                   </div>
                   <p className="text-xs text-slate-400 truncate">{u.email}</p>
+                  <span className="text-xs text-slate-500 font-medium">{u.projectCount}</span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <select

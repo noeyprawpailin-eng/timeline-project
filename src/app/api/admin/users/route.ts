@@ -22,10 +22,11 @@ export async function GET() {
 
     const adminDb = await getAdminDb();
     const snapshot = await adminDb.collection('users').orderBy('createdAt', 'asc').get();
-    const users = snapshot.docs.map((d: any) => {
+    const users = await Promise.all(snapshot.docs.map(async (d: any) => {
       const data = d.data();
-      return { uid: data.uid, email: data.email, name: data.name, role: data.role, createdAt: data.createdAt };
-    });
+      const projectsSnap = await d.ref.collection('projects').get();
+      return { uid: data.uid, email: data.email, name: data.name, role: data.role, createdAt: data.createdAt, projectCount: projectsSnap.size };
+    }));
 
     return NextResponse.json({ users });
   } catch (e) {
