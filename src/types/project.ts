@@ -6,11 +6,19 @@ export interface Project {
   config: ProjectConfig;
   tasks: Task[];
   assignees: Assignee[];
+  reminders: Reminder[];
 }
 
 export interface Assignee {
   name: string;
   color: string;
+}
+
+export interface Reminder {
+  id: string;
+  title: string;
+  date: string; // ISO date
+  done: boolean;
 }
 
 export interface ProjectConfig {

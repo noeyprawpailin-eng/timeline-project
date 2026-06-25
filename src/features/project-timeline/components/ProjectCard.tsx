@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar, Layers, ArrowRight, Trash2, Copy, Clock, Pencil, AlertTriangle, Users } from 'lucide-react';
+import { Calendar, Layers, ArrowRight, Trash2, Copy, Clock, Pencil, AlertTriangle, Users, Bell } from 'lucide-react';
 import { Project, Assignee } from '../../../types/project';
 import { useProjectStore } from '../store/useProjectStore';
 import { HolidayEngine } from '../../../core/calendar/HolidayEngine';
 import { formatThaiDate } from '../../../lib/formatDate';
+import { ReminderModal } from './ReminderModal';
 
 const ASSIGNEE_COLORS = [
   '#3b82f6', '#10b981', '#ef4444', '#f97316', '#eab308',
@@ -29,6 +30,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [editAssigneeName, setEditAssigneeName] = useState('');
   const [editAssigneeColor, setEditAssigneeColor] = useState('');
   const [renameMap, setRenameMap] = useState<Record<string, string>>({});
+  const [showReminders, setShowReminders] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -86,6 +88,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           <Layers size={16} />
         </div>
         <div className="flex items-center gap-0.5">
+          <button onClick={(e) => { e.stopPropagation(); setShowReminders(true); }} className="relative p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-md transition-colors" title="การแจ้งเตือน">
+            <Bell size={14} />
+            {(project.reminders || []).filter(r => !r.done).length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 flex items-center justify-center bg-amber-500 text-white text-[8px] font-bold rounded-full">
+                {(project.reminders || []).filter(r => !r.done).length}
+              </span>
+            )}
+          </button>
           <button onClick={(e) => { e.stopPropagation(); setShowAssignees(true); }} className="p-1.5 text-slate-300 hover:text-violet-500 hover:bg-violet-50 rounded-md transition-colors" title="จัดการผู้รับผิดชอบ">
             <Users size={14} />
           </button>
@@ -166,6 +176,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {showReminders && (
+        <ReminderModal projectId={project.id} onClose={() => setShowReminders(false)} />
       )}
 
       {showAssignees && (
