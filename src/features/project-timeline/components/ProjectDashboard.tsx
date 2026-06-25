@@ -31,7 +31,7 @@ export const ProjectDashboard: React.FC = () => {
 
   const formatHolidayDate = (dateStr: string) => {
     const [y, m, d] = dateStr.split('-');
-    return `${parseInt(d)}/${m}/${parseInt(y) + 543}`;
+    return `${d.padStart(2, '0')}/${m.padStart(2, '0')}/${parseInt(y) + 543}`;
   };
 
   const filteredProjects = projects.filter((p) =>
