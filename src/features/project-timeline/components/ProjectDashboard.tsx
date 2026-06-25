@@ -243,14 +243,18 @@ export const ProjectDashboard: React.FC = () => {
                               />
                               <input type="text" value={editingHolidayName}
                                 onChange={(e) => setEditingHolidayName(e.target.value)}
-                                onKeyDown={(e) => {
+                                onKeyDown={async (e) => {
                                   if (e.key === 'Enter') {
                                     const oldDate = date;
                                     const newDate = editingHolidayNewDate;
                                     const newName = editingHolidayName.trim();
                                     if (newName && newDate && (newDate !== oldDate || newName !== name)) {
-                                      removeGlobalHoliday(oldDate);
-                                      addGlobalHoliday(newDate, newName);
+                                      try {
+                                        await removeGlobalHoliday(oldDate);
+                                        await addGlobalHoliday(newDate, newName);
+                                      } catch (err) {
+                                        console.error('Failed to update holiday', err);
+                                      }
                                     }
                                     setEditingHolidayDate(null);
                                   }
@@ -259,13 +263,17 @@ export const ProjectDashboard: React.FC = () => {
                                 className="flex-1 px-2 py-1 bg-white border border-amber-200 rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                                 autoFocus
                               />
-                              <button onClick={() => {
+                              <button onClick={async () => {
                                 const oldDate = date;
                                 const newDate = editingHolidayNewDate;
                                 const newName = editingHolidayName.trim();
                                 if (newName && newDate && (newDate !== oldDate || newName !== name)) {
-                                  removeGlobalHoliday(oldDate);
-                                  addGlobalHoliday(newDate, newName);
+                                  try {
+                                    await removeGlobalHoliday(oldDate);
+                                    await addGlobalHoliday(newDate, newName);
+                                  } catch (err) {
+                                    console.error('Failed to update holiday', err);
+                                  }
                                 }
                                 setEditingHolidayDate(null);
                               }} className="p-1 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors">
