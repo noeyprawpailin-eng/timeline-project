@@ -20,6 +20,9 @@ export const ProjectDashboard: React.FC = () => {
   const [editingHolidayDate, setEditingHolidayDate] = useState<string | null>(null);
   const [editingHolidayName, setEditingHolidayName] = useState('');
   const [editingHolidayNewDate, setEditingHolidayNewDate] = useState('');
+  const [editDD, setEditDD] = useState('');
+  const [editMM, setEditMM] = useState('');
+  const [editYYYY, setEditYYYY] = useState('');
   const [newAssigneeName, setNewAssigneeName] = useState('');
   const [newAssigneeColor, setNewAssigneeColor] = useState('#3b82f6');
   const [assignees, setAssignees] = useState<Assignee[]>([]);
@@ -239,18 +242,33 @@ export const ProjectDashboard: React.FC = () => {
                     <div className="max-h-52 overflow-y-auto space-y-1.5 pl-1">
                       {Object.entries(globalHolidays).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime()).map(([date, name]) => (
                         <div key={date} className="flex items-center justify-between py-1.5 px-2.5 bg-slate-50 rounded-md group">
-                          {editingHolidayDate === date ? (
-                            <div className="flex items-center gap-1.5 flex-1">
-                              <input type="date" value={editingHolidayNewDate}
-                                onChange={(e) => setEditingHolidayNewDate(e.target.value)}
-                                className="w-32 px-2 py-1 bg-white border border-amber-200 rounded text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                           {editingHolidayDate === date ? (
+                            <div className="flex items-center gap-1 flex-1">
+                              <input type="text" inputMode="numeric" value={editDD}
+                                onChange={(e) => setEditDD(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                                className="w-8 px-1 py-1 bg-white border border-amber-200 rounded text-xs font-medium text-center focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                                placeholder="วว" maxLength={2}
+                              />
+                              <span className="text-slate-300 text-xs">/</span>
+                              <input type="text" inputMode="numeric" value={editMM}
+                                onChange={(e) => setEditMM(e.target.value.replace(/\D/g, '').slice(0, 2))}
+                                className="w-8 px-1 py-1 bg-white border border-amber-200 rounded text-xs font-medium text-center focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                                placeholder="ดด" maxLength={2}
+                              />
+                              <span className="text-slate-300 text-xs">/</span>
+                              <input type="text" inputMode="numeric" value={editYYYY}
+                                onChange={(e) => setEditYYYY(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                className="w-12 px-1 py-1 bg-white border border-amber-200 rounded text-xs font-medium text-center focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                                placeholder="ปปปป" maxLength={4}
                               />
                               <input type="text" value={editingHolidayName}
                                 onChange={(e) => setEditingHolidayName(e.target.value)}
                                 onKeyDown={async (e) => {
                                   if (e.key === 'Enter') {
                                     const oldDate = date;
-                                    const newDate = editingHolidayNewDate;
+                                    const newDate = editDD && editMM && editYYYY
+                                      ? `${parseInt(editYYYY) - 543}-${editMM.padStart(2, '0')}-${editDD.padStart(2, '0')}`
+                                      : '';
                                     const newName = editingHolidayName.trim();
                                     if (newName && newDate && (newDate !== oldDate || newName !== name)) {
                                       try {
@@ -269,7 +287,9 @@ export const ProjectDashboard: React.FC = () => {
                               />
                               <button onClick={async () => {
                                 const oldDate = date;
-                                const newDate = editingHolidayNewDate;
+                                const newDate = editDD && editMM && editYYYY
+                                  ? `${parseInt(editYYYY) - 543}-${editMM.padStart(2, '0')}-${editDD.padStart(2, '0')}`
+                                  : '';
                                 const newName = editingHolidayName.trim();
                                 if (newName && newDate && (newDate !== oldDate || newName !== name)) {
                                   try {
@@ -289,7 +309,15 @@ export const ProjectDashboard: React.FC = () => {
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-xs flex-1 cursor-pointer"
-                              onClick={() => { setEditingHolidayDate(date); setEditingHolidayName(name); setEditingHolidayNewDate(date); }}>
+                              onClick={() => { 
+                                const [y, m, d] = date.split('-');
+                                setEditingHolidayDate(date);
+                                setEditingHolidayName(name);
+                                setEditingHolidayNewDate(date);
+                                setEditDD(d);
+                                setEditMM(m);
+                                setEditYYYY(String(parseInt(y) + 543));
+                              }}>
                               <span className="font-medium text-slate-500">{formatHolidayDate(date)}</span>
                               <span className="text-slate-700 font-medium">{name}</span>
                             </div>
