@@ -181,41 +181,40 @@ export default function AdminPage() {
 
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 space-y-5">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="relative overflow-hidden rounded-xl bg-white border border-slate-200/70 p-5 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-violet-100/60 to-transparent rounded-bl-full" />
-            <div className="relative flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-violet-500 mb-0.5">
-                  <Users size={16} />
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">ผู้ใช้ทั้งหมด</span>
+        <div className="rounded-xl bg-white border border-slate-200/70 shadow-sm overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+            <div className="p-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-violet-500 mb-0.5">
+                    <Users size={16} />
+                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">ผู้ใช้ทั้งหมด</span>
+                  </div>
+                  <p className="text-3xl font-bold text-slate-900 mt-1">{users.filter(u => u.role !== 'admin').length}</p>
                 </div>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{users.filter(u => u.role !== 'admin').length}</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-                <Users size={18} className="text-violet-600" />
-              </div>
-            </div>
-            <p className="mt-2 text-[11px] text-slate-400">รวมผู้ใช้ทั่วไป (ไม่รวมผู้ดูแล)</p>
-          </div>
-
-          <div className="relative overflow-hidden rounded-xl bg-white border border-slate-200/70 p-5 shadow-sm">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-blue-100/60 to-transparent rounded-bl-full" />
-            <div className="relative flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-blue-500 mb-0.5">
-                  <Layout size={16} />
-                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">โปรเจคทั้งหมด</span>
+                <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                  <Users size={18} className="text-violet-600" />
                 </div>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{totalProjects}</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Layout size={18} className="text-blue-600" />
-              </div>
+              <p className="mt-2 text-[11px] text-slate-400">รวมผู้ใช้ทั่วไป (ไม่รวมผู้ดูแล)</p>
             </div>
-            <p className="mt-2 text-[11px] text-slate-400">รวมทุกโปรเจคในระบบ</p>
-          </div>
 
+          <div className="p-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-blue-500 mb-0.5">
+                    <Layout size={16} />
+                    <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">โปรเจคทั้งหมด</span>
+                  </div>
+                  <p className="text-3xl font-bold text-slate-900 mt-1">{totalProjects}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                  <Layout size={18} className="text-blue-600" />
+                </div>
+              </div>
+              <p className="mt-2 text-[11px] text-slate-400">รวมทุกโปรเจคในระบบ</p>
+            </div>
+          </div>
         </div>
 
         {error && (
