@@ -236,7 +236,7 @@ export default function Home() {
   };
 
   return (
-    <main className="flex flex-col min-h-screen bg-[var(--background)]">
+    <main className="flex flex-col h-screen overflow-hidden bg-[var(--background)]">
       <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-violet-500" />
 
       <header className="flex items-center justify-between px-5 h-14 bg-white border-b border-slate-100">
