@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Briefcase, Calendar, List, Search, Shield, LogOut, Users } from 'lucide-react';
+import { Plus, Briefcase, Calendar, List, Search, Shield, LogOut, Users, Check, X } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectCard } from './ProjectCard';
+import { formatThaiDate } from '@/lib/formatDate';
 import type { Assignee } from '../../../types/project';
 
 export const ProjectDashboard: React.FC = () => {
@@ -242,30 +243,42 @@ export const ProjectDashboard: React.FC = () => {
                               />
                               <input type="text" value={editingHolidayName}
                                 onChange={(e) => setEditingHolidayName(e.target.value)}
-                                onBlur={() => {
-                                  if (editingHolidayName.trim() && editingHolidayNewDate) {
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
                                     const oldDate = date;
                                     const newDate = editingHolidayNewDate;
                                     const newName = editingHolidayName.trim();
-                                    if (newDate !== oldDate || newName !== name) {
+                                    if (newName && newDate && (newDate !== oldDate || newName !== name)) {
                                       removeGlobalHoliday(oldDate);
                                       addGlobalHoliday(newDate, newName);
                                     }
+                                    setEditingHolidayDate(null);
                                   }
-                                  setEditingHolidayDate(null);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                                   if (e.key === 'Escape') setEditingHolidayDate(null);
                                 }}
                                 className="flex-1 px-2 py-1 bg-white border border-amber-200 rounded text-xs font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                                 autoFocus
                               />
+                              <button onClick={() => {
+                                const oldDate = date;
+                                const newDate = editingHolidayNewDate;
+                                const newName = editingHolidayName.trim();
+                                if (newName && newDate && (newDate !== oldDate || newName !== name)) {
+                                  removeGlobalHoliday(oldDate);
+                                  addGlobalHoliday(newDate, newName);
+                                }
+                                setEditingHolidayDate(null);
+                              }} className="p-1 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors">
+                                <Check size={14} />
+                              </button>
+                              <button onClick={() => setEditingHolidayDate(null)} className="p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors">
+                                <X size={14} />
+                              </button>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 text-xs flex-1 cursor-pointer"
                               onClick={() => { setEditingHolidayDate(date); setEditingHolidayName(name); setEditingHolidayNewDate(date); }}>
-                              <span className="font-mono font-medium text-slate-500">{date}</span>
+                              <span className="font-medium text-slate-500">{formatThaiDate(date)}</span>
                               <span className="text-slate-700 font-medium">{name}</span>
                             </div>
                           )}
