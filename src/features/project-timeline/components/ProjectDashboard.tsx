@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Briefcase, Calendar, List, Search, Shield, LogOut, Users, Check, X } from 'lucide-react';
+import { Plus, BarChartHorizontalBig, Calendar, List, Search, Shield, LogOut, Users, Check, X } from 'lucide-react';
 import { useProjectStore } from '../store/useProjectStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProjectCard } from './ProjectCard';
@@ -52,7 +52,7 @@ export const ProjectDashboard: React.FC = () => {
         <header className="bg-white/95 backdrop-blur-sm border-b border-slate-200/70 card-shadow">
           <div className="max-w-6xl mx-auto px-6 h-12 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-blue-600 text-white rounded-lg shadow-sm"><Briefcase size={16} /></div>
+              <div className="p-1.5 bg-blue-600 text-white rounded-lg shadow-sm"><BarChartHorizontalBig size={16} /></div>
               <h1 className="text-base font-extrabold text-slate-900 tracking-tight">Timeline โปรเจค</h1>
             </div>
           </div>
@@ -69,7 +69,7 @@ export const ProjectDashboard: React.FC = () => {
         <div className="max-w-6xl mx-auto px-6 h-12 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 bg-blue-600 text-white rounded-lg shadow-sm">
-              <Briefcase size={16} />
+              <BarChartHorizontalBig size={16} />
             </div>
             <h1 className="text-base font-extrabold text-slate-900 tracking-tight">Timeline โปรเจค</h1>
           </div>
@@ -345,7 +345,7 @@ export const ProjectDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 bg-gradient-to-br from-slate-800 to-slate-700 text-white rounded-lg shadow-sm">
-                <Briefcase size={15} />
+                <BarChartHorizontalBig size={15} />
               </div>
               <h2 className="text-base font-extrabold text-slate-900">โปรเจคทั้งหมด</h2>
             </div>
@@ -371,7 +371,7 @@ export const ProjectDashboard: React.FC = () => {
             </div>
           ) : projects.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-14 bg-white rounded-xl border-2 border-dashed border-slate-200/80">
-              <div className="p-3 bg-slate-50 rounded-full mb-3"><Briefcase size={28} className="text-slate-300" /></div>
+              <div className="p-3 bg-slate-50 rounded-full mb-3"><BarChartHorizontalBig size={28} className="text-slate-300" /></div>
               <p className="text-slate-400 font-semibold">ยังไม่มีโปรเจค</p>
               <p className="text-slate-400 text-xs mt-1">สร้างโปรเจคแรกของคุณด้านบน</p>
             </div>
