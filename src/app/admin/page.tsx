@@ -190,13 +190,13 @@ export default function AdminPage() {
                   <Users size={16} />
                   <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">ผู้ใช้ทั้งหมด</span>
                 </div>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{users.length}</p>
+                <p className="text-3xl font-bold text-slate-900 mt-1">{users.filter(u => u.role !== 'admin').length}</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
                 <Users size={18} className="text-violet-600" />
               </div>
             </div>
-            <p className="mt-2 text-[11px] text-slate-400">รวมผู้ดูแลและผู้ใช้ทั่วไป</p>
+            <p className="mt-2 text-[11px] text-slate-400">รวมผู้ใช้ทั่วไป (ไม่รวมผู้ดูแล)</p>
           </div>
 
           <div className="relative overflow-hidden rounded-xl bg-white border border-slate-200/70 p-5 shadow-sm">
@@ -230,7 +230,7 @@ export default function AdminPage() {
                 <Shield size={18} className="text-emerald-600" />
               </div>
             </div>
-            <p className="mt-2 text-[11px] text-slate-400">จาก {users.length} ผู้ใช้ทั้งหมด</p>
+            <p className="mt-2 text-[11px] text-slate-400">จาก {users.filter(u => u.role !== 'admin').length} ผู้ใช้ทั้งหมด</p>
           </div>
         </div>
 
