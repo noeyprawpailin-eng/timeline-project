@@ -11,8 +11,8 @@ interface ReminderModalProps {
 }
 
 export const ReminderModal: React.FC<ReminderModalProps> = ({ projectId, onClose }) => {
-  const { getActiveProject, addReminder, removeReminder, toggleReminder } = useProjectStore();
-  const project = getActiveProject();
+  const { addReminder, removeReminder, toggleReminder } = useProjectStore();
+  const project = useProjectStore(s => s.projects.find(p => p.id === projectId));
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
 

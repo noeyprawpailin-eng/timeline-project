@@ -150,6 +150,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const calculated = projects.map((p) =>
         TimelineService.calculateTimeline({
           ...p,
+          reminders: p.reminders || [],
           config: { ...p.config, holidays: { ...mergedHolidays } },
         })
       );

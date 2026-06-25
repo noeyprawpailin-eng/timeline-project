@@ -88,7 +88,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           <Layers size={16} />
         </div>
         <div className="flex items-center gap-0.5">
-          <button onClick={(e) => { e.stopPropagation(); setShowReminders(true); }} className="relative p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-md transition-colors" title="การแจ้งเตือน">
+          <button onClick={(e) => { e.stopPropagation(); setShowReminders(true); }} className="relative p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors" title="จัดการการแจ้งเตือน">
             <Bell size={14} />
             {(project.reminders || []).filter(r => !r.done).length > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 flex items-center justify-center bg-amber-500 text-white text-[8px] font-bold rounded-full">
