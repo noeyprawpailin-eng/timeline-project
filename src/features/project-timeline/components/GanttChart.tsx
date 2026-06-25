@@ -503,9 +503,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                   const dropPos = dragOverTaskId?.startsWith(task.id + ':') ? dragOverTaskId.split(':')[1] as 'before' | 'after' | 'child' | undefined : undefined;
                   const statusMeta = STATUS_OPTIONS.find(s => s.value === (task.status || 'pending'));
 
-                  return (
+                   return (
                     <div key={task.id}
-                      className={`flex border-b border-slate-50/80 transition-colors group ${readonly ? '' : 'hover:bg-blue-50/40'} ${depth === 0 ? 'bg-white' : 'bg-slate-50/30'} ${dragTaskId === task.id ? 'opacity-40' : ''} ${isHeading ? 'bg-indigo-50/30 border-l-2 border-l-indigo-300' : ''}`}
+                      className={`flex border-b border-slate-50/80 transition-colors group ${readonly ? '' : 'hover:bg-blue-50/40'} ${depth === 0 ? 'bg-white' : 'bg-slate-50/30'} ${dragTaskId === task.id ? 'opacity-40' : ''} ${isHeading ? 'bg-slate-100' : ''}`}
                       style={{ height: ROW_HEIGHT }}
                       onDragOver={(e) => handleDragOver(e, task.id)}
                       onDragLeave={handleDragLeave}
@@ -619,7 +619,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
 
                   return (
                     <div key={task.id}
-                      className={`relative border-b border-slate-50/80 hover:bg-blue-50/20 transition-colors ${depth === 0 ? 'bg-white' : 'bg-slate-50/30'} ${isHeading ? 'bg-indigo-50/30' : ''}`}
+                      className={`relative border-b border-slate-50/80 hover:bg-blue-50/20 transition-colors ${depth === 0 ? 'bg-white' : 'bg-slate-50/30'} ${isHeading ? 'bg-slate-100' : ''}`}
                       style={{ height: ROW_HEIGHT }}
                     >
                       {Array.from({ length: totalDays }).map((_, i) => {

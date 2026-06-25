@@ -105,12 +105,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         </div>
         <div className="flex items-center gap-0.5">
           <div className="relative">
-            <button onClick={(e) => { e.stopPropagation(); setShowDuePopover(!showDuePopover); }} className="relative p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors" title="งานที่ถึงกำหนดวันนี้">
+            <button onClick={(e) => { e.stopPropagation(); setShowDuePopover(!showDuePopover); }} className="relative p-1.5 text-slate-300 hover:text-amber-500 hover:bg-amber-50 rounded-md transition-colors" title="งานที่ถึงกำหนดวันนี้">
               <Bell size={14} />
               {dueToday.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 flex items-center justify-center bg-amber-500 text-white text-[8px] font-bold rounded-full">
-                  {dueToday.length}
-                </span>
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full" />
               )}
             </button>
             {showDuePopover && (
