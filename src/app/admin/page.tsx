@@ -377,7 +377,7 @@ export default function AdminPage() {
 
           {/* Footer */}
           <div className="flex items-center justify-between px-5 py-3 bg-slate-50/50 border-t border-slate-100">
-            <span className="text-[11px] text-slate-400">ทั้งหมด {users.length} คน</span>
+            <span className="text-[11px] text-slate-400">ทั้งหมด {users.filter(u => u.role !== 'admin').length} คน</span>
             <span className="text-[11px] text-slate-400">แสดง {filtered.length} คน</span>
           </div>
         </div>
