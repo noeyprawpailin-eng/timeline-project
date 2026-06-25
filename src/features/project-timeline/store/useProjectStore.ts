@@ -64,11 +64,6 @@ interface ProjectState {
   renameProject: (id: string, name: string) => Promise<void>;
   clearError: () => void;
 
-  // Reminders
-  addReminder: (id: string, reminder: { title: string; date: string }) => Promise<void>;
-  removeReminder: (id: string, reminderId: string) => Promise<void>;
-  toggleReminder: (id: string, reminderId: string) => Promise<void>;
-
   // Task Management (for active project)
   updateTask: (taskId: string, updates: Partial<Task>, skipAutoShift?: boolean) => Promise<void>;
   updateProject: (updates: Partial<Project>) => Promise<void>;
@@ -150,7 +145,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const calculated = projects.map((p) =>
         TimelineService.calculateTimeline({
           ...p,
-          reminders: p.reminders || [],
+
           config: { ...p.config, holidays: { ...mergedHolidays } },
         })
       );
@@ -177,7 +172,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       config: { workingDays: [1, 2, 3, 4, 5], holidays: { ...get().globalHolidays } },
       tasks: [],
       assignees: assignees || [],
-      reminders: [],
+
     });
 
     await firestoreService.createProject(newProject);
@@ -271,66 +266,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.error('[Rename Error]', msg);
-      set({ error: msg });
-    }
-  },
-
-  addReminder: async (id, reminder) => {
-    try {
-      get().pushSnapshot();
-      const state = get();
-      const project = state.projects.find(p => p.id === id);
-      if (!project) return;
-      const newReminder = {
-        id: `rem_${Date.now()}`,
-        title: reminder.title,
-        date: reminder.date,
-        done: false,
-      };
-      const updated = { ...project, reminders: [...(project.reminders || []), newReminder] };
-      await firestoreService.saveProject(id, updated);
-      set((s) => ({
-        projects: s.projects.map(p => p.id === id ? updated : p),
-      }));
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      set({ error: msg });
-    }
-  },
-
-  removeReminder: async (id, reminderId) => {
-    try {
-      get().pushSnapshot();
-      const state = get();
-      const project = state.projects.find(p => p.id === id);
-      if (!project) return;
-      const updated = { ...project, reminders: (project.reminders || []).filter(r => r.id !== reminderId) };
-      await firestoreService.saveProject(id, updated);
-      set((s) => ({
-        projects: s.projects.map(p => p.id === id ? updated : p),
-      }));
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      set({ error: msg });
-    }
-  },
-
-  toggleReminder: async (id, reminderId) => {
-    try {
-      get().pushSnapshot();
-      const state = get();
-      const project = state.projects.find(p => p.id === id);
-      if (!project) return;
-      const updated = {
-        ...project,
-        reminders: (project.reminders || []).map(r => r.id === reminderId ? { ...r, done: !r.done } : r),
-      };
-      await firestoreService.saveProject(id, updated);
-      set((s) => ({
-        projects: s.projects.map(p => p.id === id ? updated : p),
-      }));
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
       set({ error: msg });
     }
   },

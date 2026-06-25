@@ -6,7 +6,6 @@ import { Project, Assignee } from '../../../types/project';
 import { useProjectStore } from '../store/useProjectStore';
 import { HolidayEngine } from '../../../core/calendar/HolidayEngine';
 import { formatThaiDate } from '../../../lib/formatDate';
-import { ReminderModal } from './ReminderModal';
 
 const ASSIGNEE_COLORS = [
   '#3b82f6', '#10b981', '#ef4444', '#f97316', '#eab308',
@@ -30,8 +29,9 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const [editAssigneeName, setEditAssigneeName] = useState('');
   const [editAssigneeColor, setEditAssigneeColor] = useState('');
   const [renameMap, setRenameMap] = useState<Record<string, string>>({});
-  const [showReminders, setShowReminders] = useState(false);
+  const [showDuePopover, setShowDuePopover] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -79,6 +79,22 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     setAssigneeList(assigneeList.filter(a => a.name !== name));
   };
 
+  const todayISO = new Date().toISOString().split('T')[0];
+  const dueToday = project.tasks.filter(
+    t => t.type !== 'heading' && t.calculatedEndDate === todayISO
+  );
+
+  useEffect(() => {
+    if (!showDuePopover) return;
+    const handler = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setShowDuePopover(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showDuePopover]);
+
   return (
     <div className="group relative bg-white border border-slate-200/80 rounded-xl p-4 card-shadow card-shadow-hover transition-all duration-200">
       <div className="absolute top-0 left-4 right-4 h-0.5 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -88,14 +104,38 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           <Layers size={16} />
         </div>
         <div className="flex items-center gap-0.5">
-          <button onClick={(e) => { e.stopPropagation(); setShowReminders(true); }} className="relative p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors" title="จัดการการแจ้งเตือน">
-            <Bell size={14} />
-            {(project.reminders || []).filter(r => !r.done).length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 flex items-center justify-center bg-amber-500 text-white text-[8px] font-bold rounded-full">
-                {(project.reminders || []).filter(r => !r.done).length}
-              </span>
+          <div className="relative">
+            <button onClick={(e) => { e.stopPropagation(); setShowDuePopover(!showDuePopover); }} className="relative p-1.5 text-amber-500 hover:bg-amber-50 rounded-md transition-colors" title="งานที่ถึงกำหนดวันนี้">
+              <Bell size={14} />
+              {dueToday.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 flex items-center justify-center bg-amber-500 text-white text-[8px] font-bold rounded-full">
+                  {dueToday.length}
+                </span>
+              )}
+            </button>
+            {showDuePopover && (
+              <div ref={popoverRef} className="absolute right-0 top-full mt-1.5 w-64 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden">
+                <div className="px-3.5 py-2.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                  งานที่ถึงกำหนดวันนี้
+                </div>
+                {dueToday.length === 0 ? (
+                  <div className="px-3.5 py-6 text-center text-xs text-slate-400">ไม่มีงานที่ถึงกำหนด</div>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto">
+                    {dueToday.map(t => (
+                      <div key={t.id} className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-amber-50 transition-colors">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-semibold text-slate-700 truncate">{t.name}</div>
+                          <div className="text-[10px] text-slate-400">{formatThaiDate(t.calculatedEndDate!)}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
-          </button>
+          </div>
           <button onClick={(e) => { e.stopPropagation(); setShowAssignees(true); }} className="p-1.5 text-slate-300 hover:text-violet-500 hover:bg-violet-50 rounded-md transition-colors" title="จัดการผู้รับผิดชอบ">
             <Users size={14} />
           </button>
@@ -176,10 +216,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </div>
           </div>
         </div>
-      )}
-
-      {showReminders && (
-        <ReminderModal projectId={project.id} onClose={() => setShowReminders(false)} />
       )}
 
       {showAssignees && (

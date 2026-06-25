@@ -5,7 +5,7 @@ import { useProjectStore } from '../store/useProjectStore';
 import { differenceInDays, addDays } from 'date-fns';
 import { Task } from '../../../types/project';
 import { TaskEditModal } from './TaskEditModal';
-import { Plus, Calendar, ChevronDown, ChevronRight, GripVertical, List, Layers, Undo2, Redo2 } from 'lucide-react';
+import { Plus, Calendar, ChevronDown, ChevronRight, GripVertical, List, Layers, Undo2, Redo2, X, Bell } from 'lucide-react';
 import { formatThaiDate } from '../../../lib/formatDate';
 
 const THAI_DAYS = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
@@ -107,6 +107,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
   const [dragTaskId, setDragTaskId] = useState<string | null>(null);
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   const [showExtraCols, setShowExtraCols] = useState(false);
+  const [dismissedDueToast, setDismissedDueToast] = useState(false);
 
   if (!project) return null;
 
@@ -692,6 +693,28 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
       </div>
 
       {!readonly && editingTask && <TaskEditModal key={editingTask.id} task={editingTask} onClose={() => setEditingTask(null)} />}
+
+      {!dismissedDueToast && (() => {
+        const today = new Date().toISOString().split('T')[0];
+        const dueToday = project.tasks.filter(t => t.type !== 'heading' && t.calculatedEndDate === today);
+        if (dueToday.length === 0) return null;
+        return (
+          <div className="fixed bottom-6 right-6 z-50 bg-amber-50 border border-amber-200 rounded-xl shadow-lg max-w-sm w-full">
+            <div className="flex items-start gap-3 p-3.5">
+              <Bell size={18} className="text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="text-[11px] font-bold text-amber-800 mb-1.5">งานที่ถึงกำหนดวันนี้</div>
+                {dueToday.map(t => (
+                  <div key={t.id} className="text-xs text-amber-700">• {t.name}</div>
+                ))}
+              </div>
+              <button onClick={() => setDismissedDueToast(true)} className="shrink-0 p-0.5 text-amber-400 hover:text-amber-600 transition-colors">
+                <X size={14} />
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 };
