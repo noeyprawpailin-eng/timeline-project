@@ -181,7 +181,7 @@ export default function AdminPage() {
 
       <div className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-6 space-y-5">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="relative overflow-hidden rounded-xl bg-white border border-slate-200/70 p-5 shadow-sm">
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-violet-100/60 to-transparent rounded-bl-full" />
             <div className="relative flex items-start justify-between">
