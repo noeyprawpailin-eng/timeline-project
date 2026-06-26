@@ -668,6 +668,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
 
                         return segments.map((s, si) => {
                           const isDragging = barDragRef.current?.taskId === task.id;
+                          const isFirst = si === 0;
+                          const isLast = si === segments.length - 1;
+                          const borderRadius = isFirst && isLast ? '8px' : isFirst ? '8px 0 0 8px' : isLast ? '0 8px 8px 0' : '0';
                           return (
                             <div key={si}
                               title={`${task.name}\n${formatThaiDate(task.calculatedStartDate!)} – ${formatThaiDate(task.calculatedEndDate!)}`}
@@ -676,7 +679,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
                                 left: s.startIdx * DAY_WIDTH, width: s.length * DAY_WIDTH, top: barTop, height: 20,
                                 transform: isDragging && barDragOffset ? `translateX(${barDragOffset * DAY_WIDTH}px)` : '',
                                 background: `linear-gradient(135deg, ${barColor}, ${lightenColor(barColor, 30)})`,
-                                borderRadius: '8px', boxShadow: `0 2px 6px ${barColor}40`, border: `1px solid ${barLighter}`,
+                                borderRadius, boxShadow: `0 2px 6px ${barColor}40`, border: `1px solid ${barLighter}`,
                               }}
                               onMouseDown={(e) => !readonly && handleBarMouseDown(e, task)}
                             />
