@@ -270,7 +270,7 @@ export default function Home() {
           {!isReadonly && (
             <button onClick={handleExport} className="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all active:scale-95">
               <Download size={15} />
-              <span className="hidden sm:inline">ส่งออก</span>
+              <span className="hidden sm:inline">Export</span>
             </button>
           )}
           <div className="relative" ref={shareRef}>
