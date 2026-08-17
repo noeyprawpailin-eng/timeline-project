@@ -108,6 +108,9 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
   const [dragOverTaskId, setDragOverTaskId] = useState<string | null>(null);
   const [showExtraCols, setShowExtraCols] = useState(false);
   const [dismissedDueToast, setDismissedDueToast] = useState(false);
+  const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
+
+  const clearHover = (taskId: string) => setHoveredTaskId(prev => (prev === taskId ? null : prev));
 
   if (!project) return null;
 
@@ -505,8 +508,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
 
                    return (
                     <div key={task.id}
-                      className={`flex border-b border-slate-50/80 transition-colors group ${readonly ? '' : 'hover:bg-blue-50/40'} ${depth === 0 ? 'bg-white' : 'bg-slate-50/30'} ${dragTaskId === task.id ? 'opacity-40' : ''} ${isHeading ? 'bg-slate-100' : ''}`}
+                      className={`flex border-b border-slate-50/80 transition-colors group ${dragTaskId === task.id ? 'opacity-40' : ''} ${hoveredTaskId === task.id ? 'bg-blue-100/70' : isHeading ? 'bg-slate-100' : depth === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
                       style={{ height: ROW_HEIGHT }}
+                      onMouseEnter={() => setHoveredTaskId(task.id)}
+                      onMouseLeave={() => clearHover(task.id)}
                       onDragOver={(e) => handleDragOver(e, task.id)}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, task.id)}
@@ -619,8 +624,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
 
                   return (
                     <div key={task.id}
-                      className={`relative border-b border-slate-50/80 hover:bg-blue-50/20 transition-colors ${depth === 0 ? 'bg-white' : 'bg-slate-50/30'} ${isHeading ? 'bg-slate-100' : ''}`}
+                      className={`relative border-b border-slate-50/80 transition-colors ${hoveredTaskId === task.id ? 'bg-blue-100/70' : isHeading ? 'bg-slate-100' : depth === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
                       style={{ height: ROW_HEIGHT }}
+                      onMouseEnter={() => setHoveredTaskId(task.id)}
+                      onMouseLeave={() => clearHover(task.id)}
                     >
                       {Array.from({ length: totalDays }).map((_, i) => {
                         const date = addDays(timelineStart, i);
