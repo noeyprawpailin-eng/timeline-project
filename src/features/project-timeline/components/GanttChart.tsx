@@ -153,6 +153,19 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
     return true;
   };
 
+  const nearestWorkingDay = (date: Date): Date => {
+    if (isWorkingDay(date)) return date;
+    for (let i = 1; i <= 7; i++) {
+      const forward = new Date(date);
+      forward.setDate(forward.getDate() + i);
+      if (isWorkingDay(forward)) return forward;
+      const backward = new Date(date);
+      backward.setDate(backward.getDate() - i);
+      if (isWorkingDay(backward)) return backward;
+    }
+    return date;
+  };
+
   // Auto-expand name column width
   const nameColWidth = useMemo(() => calcMinNameWidth(project.tasks), [project.tasks]);
   const LEFT_TOTAL = DRAG_HANDLE_WIDTH + nameColWidth + STATUS_COL_WIDTH + ASSIGNEE_COL_WIDTH + NOTES_COL_WIDTH;
@@ -330,7 +343,7 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
     setDragOverTaskId(null);
   };
 
-  const barDragRef = React.useRef<{ taskId: string; startX: number; origManualStart: string; shiftKey: boolean; } | null>(null);
+  const barDragRef = React.useRef<{ taskId: string; startX: number; origManualStart: string; shiftHeld: boolean } | null>(null);
   const [barDragOffset, setBarDragOffset] = useState(0);
 
   const bodyScrollRef = useRef<HTMLDivElement>(null);
@@ -351,34 +364,45 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
       taskId: task.id,
       startX: e.clientX,
       origManualStart: task.manualStartDate || task.calculatedStartDate || '',
-      shiftKey: e.shiftKey,
+      shiftHeld: e.shiftKey,
     };
     setBarDragOffset(0);
 
+    const handleKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key === 'Shift' && barDragRef.current) barDragRef.current.shiftHeld = true;
+    };
     const handleMouseMove = (ev: MouseEvent) => {
       const drag = barDragRef.current;
-      if (!drag) return;
+      if (!drag || !drag.origManualStart) return;
       const delta = Math.round((ev.clientX - drag.startX) / DAY_WIDTH);
-      setBarDragOffset(delta);
+      const target = new Date(drag.origManualStart);
+      target.setDate(target.getDate() + delta);
+      const snapped = nearestWorkingDay(target);
+      const effectiveDelta = Math.round((snapped.getTime() - new Date(drag.origManualStart).getTime()) / 86400000);
+      setBarDragOffset(effectiveDelta);
     };
     const handleMouseUp = (ev: MouseEvent) => {
       const drag = barDragRef.current;
       if (drag) {
         const delta = Math.round((ev.clientX - drag.startX) / DAY_WIDTH);
-        if (delta !== 0 && drag.origManualStart) {
-          const d = new Date(drag.origManualStart);
-          d.setDate(d.getDate() + delta);
-          updateTask(drag.taskId, { manualStartDate: d.toISOString().split('T')[0] }, !drag.shiftKey);
+        const target = new Date(drag.origManualStart);
+        target.setDate(target.getDate() + delta);
+        const snapped = nearestWorkingDay(target);
+        const effectiveDelta = Math.round((snapped.getTime() - new Date(drag.origManualStart).getTime()) / 86400000);
+        if (effectiveDelta !== 0 && drag.origManualStart) {
+          updateTask(drag.taskId, { manualStartDate: snapped.toISOString().split('T')[0] }, !drag.shiftHeld);
         }
       }
       barDragRef.current = null;
       setBarDragOffset(0);
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('keydown', handleKeyDown);
       document.body.style.cursor = '';
     };
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('keydown', handleKeyDown);
     document.body.style.cursor = 'ew-resize';
   };
 

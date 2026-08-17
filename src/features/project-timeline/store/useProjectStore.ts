@@ -285,22 +285,29 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     const taskIndex = orderedIds.indexOf(taskId);
     const oldTask = activeProject.tasks.find(t => t.id === taskId);
 
-    const updatedTasks = activeProject.tasks.map((t) =>
+    const updatedTasks = activeProject.tasks.map(t =>
       t.id === taskId ? { ...t, ...updates } : t
     );
     let updatedProject = TimelineService.calculateTimeline({ ...activeProject, tasks: updatedTasks });
 
-    if (taskIndex >= 0 && oldTask?.calculatedEndDate && !skipAutoShift) {
+    if (taskIndex >= 0 && oldTask?.calculatedStartDate && oldTask?.calculatedEndDate && !skipAutoShift) {
       const newTask = updatedProject.tasks.find(t => t.id === taskId);
-      if (newTask?.calculatedEndDate) {
-        const delta = daysDiff(newTask.calculatedEndDate, oldTask.calculatedEndDate);
-        if (delta !== 0) {
+      if (newTask?.calculatedStartDate && newTask?.calculatedEndDate) {
+        const startDelta = daysDiff(newTask.calculatedStartDate, oldTask.calculatedStartDate);
+        if (startDelta !== 0) {
           const subsequentIds = new Set(orderedIds.slice(taskIndex + 1));
-          const shiftedTasks = updatedProject.tasks.map(t =>
-            subsequentIds.has(t.id) && t.manualStartDate
-              ? { ...t, manualStartDate: shiftDate(t.manualStartDate, delta) }
-              : t
-          );
+          const oldEnd = oldTask.calculatedEndDate;
+          const newEnd = newTask.calculatedEndDate;
+          const shiftedTasks = activeProject.tasks.map(t => {
+            if (t.id === taskId) return { ...t, ...updates };
+            if (subsequentIds.has(t.id) && t.calculatedStartDate) {
+              const offset = daysDiff(t.calculatedStartDate, oldEnd);
+              if (offset === 0) return { ...t, manualStartDate: newEnd };
+              if (offset === 1) return { ...t, manualStartDate: shiftDate(newEnd, 1) };
+              return { ...t, manualStartDate: shiftDate(t.calculatedStartDate, startDelta) };
+            }
+            return t;
+          });
           updatedProject = TimelineService.calculateTimeline({ ...activeProject, tasks: shiftedTasks });
         }
       }
