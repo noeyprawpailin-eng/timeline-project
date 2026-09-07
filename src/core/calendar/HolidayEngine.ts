@@ -14,7 +14,10 @@ export class HolidayEngine {
    */
   isWorkingDay(date: Date): boolean {
     const dayOfWeek = date.getDay();
-    const dateString = date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const dateString = `${y}-${m}-${d}`;
 
     // Check if it's a weekend/non-working day
     if (!this.workingDays.has(dayOfWeek)) {
