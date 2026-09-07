@@ -134,9 +134,10 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
   const projectStart = new Date(project.startDate);
   const visibleTasks = project.tasks.filter(t => t.type !== 'heading');
   const firstTask = visibleTasks[0];
-  const timelineStart = firstTask
+  const firstTaskDate = firstTask
     ? new Date(firstTask.manualStartDate || firstTask.calculatedStartDate || project.startDate)
     : projectStart;
+  const timelineStart = new Date(firstTaskDate.getFullYear(), firstTaskDate.getMonth(), 1);
   const latestEnd = visibleTasks.reduce((max, t) => {
     const end = t.calculatedEndDate || t.manualStartDate;
     return end && end > max ? end : max;
