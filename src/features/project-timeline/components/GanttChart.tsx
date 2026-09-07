@@ -132,14 +132,16 @@ export const GanttChart: React.FC<GanttChartProps> = ({ readonly = false }) => {
   const assignees = project.assignees || [];
 
   const projectStart = new Date(project.startDate);
-  const taskDates = project.tasks.flatMap(t => [
-    t.manualStartDate || t.calculatedStartDate,
-    t.calculatedEndDate,
-  ].filter(Boolean) as string[]);
-  const earliestTask = taskDates.length ? new Date(taskDates.sort()[0]) : projectStart;
-  const latestTask = taskDates.length ? new Date(taskDates.sort().reverse()[0]) : projectStart;
-  const timelineStart = addDays(earliestTask, -2);
-  const rawDays = differenceInDays(latestTask, timelineStart) + 15;
+  const visibleTasks = project.tasks.filter(t => t.type !== 'heading');
+  const firstTask = visibleTasks[0];
+  const timelineStart = firstTask
+    ? new Date(firstTask.manualStartDate || firstTask.calculatedStartDate || project.startDate)
+    : projectStart;
+  const latestEnd = visibleTasks.reduce((max, t) => {
+    const end = t.calculatedEndDate || t.manualStartDate;
+    return end && end > max ? end : max;
+  }, visibleTasks[0]?.calculatedEndDate || visibleTasks[0]?.manualStartDate || project.startDate);
+  const rawDays = differenceInDays(new Date(latestEnd), timelineStart) + 7;
   const totalDays = Math.max(rawDays, 30);
 
   const workingDaysSet = new Set(project.config.workingDays || [1, 2, 3, 4, 5]);
